@@ -1,0 +1,90 @@
+name: Pester CI Template
+
+on:
+  workflow_call:
+
+concurrency:
+  group: pester-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pre-commit:
+    name: Pre-Commit Checks
+    runs-on: ubuntu-latest
+    outputs:
+      should-test: ${{ steps.check-config.outputs.has_config != 'true' || success() }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for pre-commit config
+        id: check-config
+        run: |
+          if [ -f .pre-commit-config.yaml ]; then
+            echo "has_config=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_config=false" >> $GITHUB_OUTPUT
+            echo "::notice::No .pre-commit-config.yaml found, skipping pre-commit checks"
+          fi
+      
+      - uses: actions/setup-python@v5
+        if: steps.check-config.outputs.has_config == 'true'
+        with:
+          python-version: '3.11'
+      
+      - uses: pre-commit/action@v3.0.1
+        if: steps.check-config.outputs.has_config == 'true'
+        with:
+          extra_args: --all-files --show-diff-on-failure
+
+  test:
+    name: Pester Tests
+    runs-on: windows-latest
+    needs: [pre-commit]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Pester Tests
+        shell: powershell
+        run: |
+          $config = @{
+              Path = 'tests\Automation.Tests.ps1'
+              OutputFormat = 'NUnitXml'
+              OutputFile = 'test-results.xml'
+              PassThru = $true
+          }
+          $result = Invoke-Pester @config
+          if ($result.FailedCount -gt 0) { exit 1 }
+      
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pester-results
+          path: test-results.xml
+
+  convert-to-draft:
+    name: Convert to Draft on Failure
+    runs-on: ubuntu-latest
+    needs: [pre-commit, test]
+    if: failure() && github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Convert PR to Draft
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const mutation = `mutation($id: ID!) {
+              convertPullRequestToDraft(input: {pullRequestId: $id}) {
+                pullRequest { isDraft }
+              }
+            }`;
+            try {
+              await github.graphql(mutation, {
+                id: context.payload.pull_request.node_id
+              });
+              core.notice('PR converted to draft due to CI failure');
+            } catch (error) {
+              core.warning(`Could not convert to draft: ${error.message}`);
+            }
