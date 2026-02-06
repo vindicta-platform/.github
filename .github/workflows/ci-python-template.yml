@@ -8,24 +8,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      has_python: ${{ steps.filter.outputs.python }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            python:
-              - '**.py'
-              - 'pyproject.toml'
-              - 'uv.lock'
-              - 'requirements*.txt'
-
   pre-commit:
     name: Pre-Commit Checks
     runs-on: ubuntu-latest
@@ -55,9 +37,7 @@ jobs:
   test:
     name: Python Tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    needs: [changes, pre-commit]
-    # Only run tests if Python files changed
-    if: needs.changes.outputs.has_python == 'true'
+    needs: [pre-commit]
     strategy:
       fail-fast: false
       matrix:
@@ -66,41 +46,59 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Check for Python source files
+        id: check-python
+        run: |
+          if [ -d "src" ] || find . -name "*.py" -not -path "./.git/*" | head -1 | grep -q .; then
+            echo "has_python=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_python=false" >> $GITHUB_OUTPUT
+            echo "::notice::No Python source files found, skipping tests"
+          fi
+      
       - uses: actions/setup-python@v5
+        if: steps.check-python.outputs.has_python == 'true'
         with:
           python-version: ${{ matrix.python-version }}
       
       - uses: astral-sh/setup-uv@v4
+        if: steps.check-python.outputs.has_python == 'true'
       
       - name: Install dependencies
+        if: steps.check-python.outputs.has_python == 'true'
         run: uv sync --dev
       
       - name: Lint with ruff
+        if: steps.check-python.outputs.has_python == 'true'
         run: uv run ruff check src/ --output-format=github
         continue-on-error: true
       
       - name: Type check with mypy
+        if: steps.check-python.outputs.has_python == 'true'
         run: uv run mypy src/ --ignore-missing-imports
         continue-on-error: true
       
+      - name: Check for tests directory
+        if: steps.check-python.outputs.has_python == 'true'
+        id: check-tests
+        run: |
+          if [ -d "tests" ] && find tests -name "*.py" | head -1 | grep -q .; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+            echo "::notice::No tests directory found, skipping test execution"
+          fi
+      
       - name: Run tests with coverage
+        if: steps.check-python.outputs.has_python == 'true' && steps.check-tests.outputs.has_tests == 'true'
         run: uv run pytest tests/ -v --tb=short --cov=src --cov-report=xml
       
       - name: Upload coverage
         uses: actions/upload-artifact@v4
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.12' && steps.check-tests.outputs.has_tests == 'true'
         with:
           name: coverage-report
           path: coverage.xml
-
-  # Always-passing job for branch protection when tests are skipped
-  test-skipped:
-    name: Python Tests (skipped)
-    runs-on: ubuntu-latest
-    needs: [changes, pre-commit]
-    if: needs.changes.outputs.has_python != 'true'
-    steps:
-      - run: echo "No Python changes detected, tests skipped"
 
   convert-to-draft:
     name: Convert to Draft on Failure
