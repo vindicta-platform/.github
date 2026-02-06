@@ -74,6 +74,17 @@ repos:
       - id: detect-secrets
 ```
 
+### Markdown Link Validation (Recommended for all)
+```yaml
+repos:
+  - repo: https://github.com/tcort/markdown-link-check
+    rev: v3.12.2
+    hooks:
+      - id: markdown-link-check
+        args: ['--config', '.markdown-link-check.json']
+        types: [markdown]
+```
+
 ## Development Workflow
 
 1. **Clone** the repository
