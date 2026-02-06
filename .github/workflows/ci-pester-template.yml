@@ -4,9 +4,26 @@ on:
   workflow_call:
 
 jobs:
+  pre-commit:
+    name: Pre-Commit Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install pre-commit
+        run: pip install pre-commit
+      
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+
   test:
     name: Pester Tests
     runs-on: windows-latest
+    needs: [pre-commit]
     
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +43,7 @@ jobs:
   convert-to-draft:
     name: Convert to Draft on Failure
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [pre-commit, test]
     if: failure() && github.event_name == 'pull_request'
     permissions:
       pull-requests: write
