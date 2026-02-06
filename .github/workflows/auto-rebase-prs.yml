@@ -1,59 +1,67 @@
-name: Auto Rebase PRs
+name: Org-Wide Auto-Rebase Manager
 
 on:
   push:
     branches: [main, master]
+  schedule:
+    - cron: '*/30 * * * *' # Every 30 minutes
+  workflow_dispatch: # Manual trigger
 
 jobs:
-  auto-rebase:
-    name: Rebase Open PRs
+  manage-rebase:
+    name: Rebase All Org PRs
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Rebase open PRs
+      - name: Rebase Open PRs across Org
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GH_PAT_PLATFORM_MANAGER || secrets.GITHUB_TOKEN }}
           script: |
-            const { owner, repo } = context.repo;
-            const baseBranch = context.ref.replace('refs/heads/', '');
+            const org = 'vindicta-platform';
             
-            // Get all open PRs targeting this branch
-            const { data: prs } = await github.rest.pulls.list({
-              owner,
-              repo,
-              state: 'open',
-              base: baseBranch
+            // 1. List all repositories in the org
+            const { data: repos } = await github.rest.repos.listForOrg({
+              org,
+              type: 'all',
+              per_page: 100
             });
             
-            core.info(`Found ${prs.length} open PRs targeting ${baseBranch}`);
+            core.info(`Managing ${repos.length} repositories for ${org}`);
             
-            for (const pr of prs) {
-              // Skip draft PRs
-              if (pr.draft) {
-                core.info(`Skipping draft PR #${pr.number}`);
-                continue;
-              }
+            for (const repoInfo of repos) {
+              const repo = repoInfo.name;
               
-              try {
-                // Use GitHub's native update branch (rebase-style if enabled)
-                await github.rest.pulls.updateBranch({
-                  owner,
-                  repo,
-                  pull_number: pr.number
-                });
-                core.notice(`Updated PR #${pr.number}: ${pr.title}`);
-              } catch (error) {
-                if (error.status === 422) {
-                  core.info(`PR #${pr.number} is already up-to-date or has conflicts`);
-                } else {
-                  core.warning(`Failed to update PR #${pr.number}: ${error.message}`);
+              // 2. Get all open, non-draft PRs for this repo
+              const { data: prs } = await github.rest.pulls.list({
+                owner: org,
+                repo,
+                state: 'open'
+              });
+              
+              if (prs.length === 0) continue;
+              
+              core.info(`Checking ${prs.length} PRs in ${repo}...`);
+              
+              for (const pr of prs) {
+                if (pr.draft) continue;
+                
+                try {
+                  // Use GitHub's native update branch API
+                  // This brings the PR up to date with its base branch
+                  await github.rest.pulls.updateBranch({
+                    owner: org,
+                    repo,
+                    pull_number: pr.number
+                  });
+                  core.notice(`Updated PR #${pr.number} in ${repo}`);
+                } catch (error) {
+                  // 422 usually means already up-to-date or has conflicts
+                  if (error.status !== 422) {
+                    core.warning(`Error updating PR #${pr.number} in ${repo}: ${error.message}`);
+                  }
                 }
               }
             }
