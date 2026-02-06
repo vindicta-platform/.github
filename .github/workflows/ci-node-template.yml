@@ -3,6 +3,10 @@ name: Node.js CI Template
 on:
   workflow_call:
 
+concurrency:
+  group: node-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pre-commit:
     name: Pre-Commit Checks
@@ -10,15 +14,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Check for pre-commit config
+        id: check-config
+        run: |
+          if [ -f .pre-commit-config.yaml ]; then
+            echo "has_config=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_config=false" >> $GITHUB_OUTPUT
+            echo "::notice::No .pre-commit-config.yaml found, skipping pre-commit checks"
+          fi
+      
       - uses: actions/setup-python@v5
+        if: steps.check-config.outputs.has_config == 'true'
         with:
           python-version: '3.11'
       
-      - name: Install pre-commit
-        run: pip install pre-commit
-      
-      - name: Run pre-commit
-        run: pre-commit run --all-files
+      - uses: pre-commit/action@v3.0.1
+        if: steps.check-config.outputs.has_config == 'true'
+        with:
+          extra_args: --all-files --show-diff-on-failure
 
   test:
     name: Node.js Tests
@@ -36,11 +50,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: Lint
+        run: npm run lint --if-present
+        continue-on-error: true
+      
+      - name: Type check
+        run: npm run typecheck --if-present
+        continue-on-error: true
+      
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
+        if: hashFiles('playwright.config.*') != ''
       
       - name: Run tests
         run: npm test
+      
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-artifacts
+          path: |
+            playwright-report/
+            test-results/
 
   convert-to-draft:
     name: Convert to Draft on Failure
