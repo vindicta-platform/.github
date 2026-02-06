@@ -8,6 +8,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      has_python: ${{ steps.filter.outputs.python }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - '**.py'
+              - 'pyproject.toml'
+              - 'uv.lock'
+              - 'requirements*.txt'
+
   pre-commit:
     name: Pre-Commit Checks
     runs-on: ubuntu-latest
@@ -37,7 +55,9 @@ jobs:
   test:
     name: Python Tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    needs: [pre-commit]
+    needs: [changes, pre-commit]
+    # Only run tests if Python files changed
+    if: needs.changes.outputs.has_python == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -72,6 +92,15 @@ jobs:
         with:
           name: coverage-report
           path: coverage.xml
+
+  # Always-passing job for branch protection when tests are skipped
+  test-skipped:
+    name: Python Tests (skipped)
+    runs-on: ubuntu-latest
+    needs: [changes, pre-commit]
+    if: needs.changes.outputs.has_python != 'true'
+    steps:
+      - run: echo "No Python changes detected, tests skipped"
 
   convert-to-draft:
     name: Convert to Draft on Failure
