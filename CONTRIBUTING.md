@@ -74,25 +74,48 @@ repos:
       - id: detect-secrets
 ```
 
-### Markdown Link Validation (Recommended for all)
-```yaml
-repos:
-  - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.12.2
-    hooks:
-      - id: markdown-link-check
-        args: ['--config', '.markdown-link-check.json']
-        types: [markdown]
-```
+### Spec-Driven Development (SDD) (REQUIRED)
+
+**Every new feature or significant change MUST follow the Spec-Driven Development lifecycle BEFORE implementation.**
+
+1.  **Propose**: Create a new specification bundle in the [`.specify`](https://github.com/vindicta-platform/.specify) repository.
+2.  **Review**: Specification bundles (spec, plan, tasks) must be reviewed and approved by the maintainers in the `.specify` hub.
+3.  **Commit**: Once approved, the specification bundle is committed to the target repository's `.specify/specs/` directory.
+4.  **Implement**: Implementation tasks are tracked via GitHub issues generated from the `tasks.md` file.
 
 ## Development Workflow
 
-1. **Clone** the repository
-2. **Install pre-commit** (see above - this is MANDATORY)
-3. **Create a feature branch** from `main` (or `master` for legacy repos)
-4. **Make your changes** with descriptive commits
-5. **Push** your branch and open a Pull Request
-6. **Wait for CI** - all checks must pass before merge
+1.  **Propose Spec**: Open a PR in the `.specify` hub with your feature specification.
+2.  **Clone Target Repo**: Once the spec is approved, clone the repository where the feature will live.
+3.  **Sync Spec**: Commit the approved `.specify/specs/[ID]-[name]/` bundle to the target repository.
+4.  **Install pre-commit**: (MANDATORY - see above).
+5.  **Create Branch**: Use the standard `feature/[ID]-[name]` naming convention.
+6.  **Execute Tasks**: Implement changes following the approved `tasks.md`.
+7.  **Push & PR**: Open a Pull Request in the target repository for implementation review.
+8.  **Verify**: All checks and acceptance criteria must be satisfied.
+
+## Branch Naming Conventions
+
+All repositories in the Vindicta Platform use **`main`** as the default branch.
+
+### Protected Branches
+- **`main`**: Production-ready code. All changes must go through Pull Requests with required reviews.
+
+### Feature Branches
+Use the following naming conventions when creating feature branches:
+
+- **Features**: `feature/[ID]-[name]` (e.g., `feature/042-credit-ledger`)
+- **Bug Fixes**: `fix/[ID]-[name]` or `bugfix/[issue-number]-[description]`
+- **Chores**: `chore/[description]` (e.g., `chore/update-dependencies`)
+- **Hotfixes**: `hotfix/[description]` (for emergency production fixes)
+
+### Branch Protection Rules
+All repositories enforce the following on the `main` branch:
+- Pull request reviews required before merging
+- Status checks must pass before merging
+- Linear history enforced (no merge commits)
+- Force pushes and deletions are blocked
+
 
 ## Code of Conduct
 
