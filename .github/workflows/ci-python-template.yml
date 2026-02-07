@@ -82,12 +82,10 @@ jobs:
       - name: Lint with ruff
         if: steps.check-python.outputs.has_python == 'true'
         run: uv run ruff check src/ --output-format=github
-        continue-on-error: true
 
       - name: Type check with mypy
         if: steps.check-python.outputs.has_python == 'true'
         run: uv run mypy src/ --ignore-missing-imports
-        continue-on-error: true
 
       - name: Check for tests directory
         if: steps.check-python.outputs.has_python == 'true'
