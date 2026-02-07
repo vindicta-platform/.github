@@ -1,0 +1,146 @@
+name: Validate Proposals
+
+on:
+  pull_request:
+    paths:
+      - 'docs/proposals/**'
+  workflow_call:
+    inputs:
+      proposals_path:
+        description: 'Path to proposals directory'
+        required: false
+        type: string
+        default: 'docs/proposals'
+
+jobs:
+  validate-proposals:
+    name: Validate Feature Proposals
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed proposal files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            docs/proposals/feat-*.md
+
+      - name: Validate proposal file naming
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "🔍 Validating proposal file naming convention..."
+          ERRORS=0
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            basename=$(basename "$file")
+            if ! echo "$basename" | grep -qE '^feat-[0-9]{3}-[a-z0-9-]+\.md$'; then
+              echo "❌ Invalid filename: $basename"
+              echo "   Expected: feat-NNN-<kebab-case-name>.md"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo "✅ Valid filename: $basename"
+            fi
+          done
+          if [ $ERRORS -gt 0 ]; then
+            echo "::error::$ERRORS file(s) have invalid naming. Use: feat-NNN-<kebab-case-name>.md"
+            exit 1
+          fi
+
+      - name: Validate proposal structure
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "🔍 Validating proposal markdown structure..."
+          ERRORS=0
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "--- Checking: $file ---"
+            
+            # Check for required SDD sections
+            for section in "Part A: Software Design Document" "Overview" "System Architecture" "Data Model" "Security" "Assumptions"; do
+              if ! grep -qi "$section" "$file"; then
+                echo "❌ Missing required SDD section: $section"
+                ERRORS=$((ERRORS + 1))
+              fi
+            done
+            
+            # Check for required BDD sections
+            for section in "Part B: Behavior Driven Development" "User Stories"; do
+              if ! grep -qi "$section" "$file"; then
+                echo "❌ Missing required BDD section: $section"
+                ERRORS=$((ERRORS + 1))
+              fi
+            done
+            
+            # Check for Gherkin syntax
+            if ! grep -q "Given" "$file" || ! grep -q "When" "$file" || ! grep -q "Then" "$file"; then
+              echo "❌ Missing Gherkin syntax (Given/When/Then) in BDD section"
+              ERRORS=$((ERRORS + 1))
+            fi
+            
+            # Check for proposal header metadata
+            if ! grep -q "Status" "$file"; then
+              echo "❌ Missing Status field in proposal header"
+              ERRORS=$((ERRORS + 1))
+            fi
+            if ! grep -q "Target Repos" "$file"; then
+              echo "❌ Missing Target Repos field in proposal header"
+              ERRORS=$((ERRORS + 1))
+            fi
+            
+            echo ""
+          done
+          
+          if [ $ERRORS -gt 0 ]; then
+            echo "::error::$ERRORS structural issue(s) found across proposals. See above for details."
+            exit 1
+          fi
+          echo "✅ All proposals pass structural validation!"
+
+      - name: Validate Gherkin blocks
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "🔍 Validating Gherkin acceptance criteria..."
+          ERRORS=0
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            # Extract gherkin blocks and validate structure
+            SCENARIOS=$(grep -c "Scenario:" "$file" || true)
+            FEATURES=$(grep -c "Feature:" "$file" || true)
+            GIVENS=$(grep -c "Given" "$file" || true)
+            WHENS=$(grep -c "When" "$file" || true)
+            THENS=$(grep -c "Then" "$file" || true)
+            
+            echo "📄 $file: $FEATURES Feature(s), $SCENARIOS Scenario(s), $GIVENS Given(s), $WHENS When(s), $THENS Then(s)"
+            
+            if [ "$SCENARIOS" -eq 0 ]; then
+              echo "❌ No Scenarios found in $file"
+              ERRORS=$((ERRORS + 1))
+            fi
+            
+            if [ "$SCENARIOS" -gt 0 ] && [ "$GIVENS" -eq 0 ]; then
+              echo "❌ Scenarios without Given clauses in $file"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+          
+          if [ $ERRORS -gt 0 ]; then
+            echo "::error::$ERRORS Gherkin issue(s) found. Each Scenario needs Given/When/Then."
+            exit 1
+          fi
+          echo "✅ All Gherkin blocks are well-formed!"
+
+      - name: Summary
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          TOTAL=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | wc -w)
+          echo "## 📋 Proposal Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **$TOTAL proposal(s)** validated successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| File naming (feat-NNN-*.md) | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+          echo "| SDD structure (5 required sections) | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+          echo "| BDD structure (User Stories + Gherkin) | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gherkin syntax (Given/When/Then) | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
