@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check for pre-commit config
         id: check-config
         run: |
@@ -23,12 +23,12 @@ jobs:
             echo "has_config=false" >> $GITHUB_OUTPUT
             echo "::notice::No .pre-commit-config.yaml found, skipping pre-commit checks"
           fi
-      
+
       - uses: actions/setup-python@v5
         if: steps.check-config.outputs.has_config == 'true'
         with:
           python-version: '3.11'
-      
+
       - uses: pre-commit/action@v3.0.1
         if: steps.check-config.outputs.has_config == 'true'
         with:
@@ -42,10 +42,10 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.11', '3.12']
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check for Python source files
         id: check-python
         run: |
@@ -55,29 +55,40 @@ jobs:
             echo "has_python=false" >> $GITHUB_OUTPUT
             echo "::notice::No Python source files found, skipping tests"
           fi
-      
+
       - uses: actions/setup-python@v5
         if: steps.check-python.outputs.has_python == 'true'
         with:
           python-version: ${{ matrix.python-version }}
-      
+
       - uses: astral-sh/setup-uv@v4
         if: steps.check-python.outputs.has_python == 'true'
-      
+
+      - name: Cache uv dependencies
+        if: steps.check-python.outputs.has_python == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: uv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-${{ matrix.python-version }}-
+
       - name: Install dependencies
         if: steps.check-python.outputs.has_python == 'true'
         run: uv sync --dev
-      
+
       - name: Lint with ruff
         if: steps.check-python.outputs.has_python == 'true'
         run: uv run ruff check src/ --output-format=github
         continue-on-error: true
-      
+
       - name: Type check with mypy
         if: steps.check-python.outputs.has_python == 'true'
         run: uv run mypy src/ --ignore-missing-imports
         continue-on-error: true
-      
+
       - name: Check for tests directory
         if: steps.check-python.outputs.has_python == 'true'
         id: check-tests
@@ -88,11 +99,11 @@ jobs:
             echo "has_tests=false" >> $GITHUB_OUTPUT
             echo "::notice::No tests directory found, skipping test execution"
           fi
-      
+
       - name: Run tests with coverage
         if: steps.check-python.outputs.has_python == 'true' && steps.check-tests.outputs.has_tests == 'true'
         run: uv run pytest tests/ -v --tb=short --cov=src --cov-report=xml
-      
+
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         if: matrix.python-version == '3.12' && steps.check-tests.outputs.has_tests == 'true'
@@ -105,6 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pre-commit, test]
     if: failure() && github.event_name == 'pull_request'
+    continue-on-error: true
     permissions:
       pull-requests: write
     steps:
