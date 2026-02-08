@@ -1,6 +1,6 @@
 # Vindicta Platform — Master Roadmap
 
-> **Last Updated**: 2026-02-04  
+> **Last Updated**: 2026-02-08  
 > **Timeframe**: Feb 4 - Mar 17, 2026 (6 Weeks)  
 > **GitHub Organization**: https://github.com/vindicta-platform/
 
@@ -18,10 +18,10 @@ The Vindicta Platform is a comprehensive ecosystem for competitive tabletop warg
 
 | Tier | Products | Focus % | 6-Week Target |
 |------|----------|---------|---------------|
-| **P0: User-Facing** | Vindicta-Portal | 25% | v1.0.0 |
-| **P1: Core Platform** | WARScribe-Core, Primordia AI, Meta-Oracle, Agent-Auditor-SDK, Vindicta-API, Vindicta-Core | 35% | v0.2.0+ |
-| **P2: Supporting** | WARScribe-Parser, Logi-Slate-UI, Battle-Transcript-Toolkit | 25% | v0.1.0-v0.2.0 |
-| **P3: Utilities** | Dice-Engine, Entropy-Buffer, Economy-Engine, Platform-Docs, CLIs | 15% | Maintenance/Docs |
+| **P0: Value-Add** | WARScribe-Parser, Meta-Oracle, Primordia AI | 40% | v0.2.0 (Functional Logic) |
+| **P1: User-Facing** | Vindicta-Portal | 25% | v1.0.0 (Integration Layer) |
+| **P2: INFRASTRUCTURE** | Agent-Auditor-SDK, Vindicta-API, Vindicta-Core | 25% | v0.2.0+ (Maturity) |
+| **P3: Supporting** | Logi-Slate-UI, Battle-Transcript-Toolkit, Utilities | 10% | v0.1.0-v0.2.0 |
 
 ---
 
@@ -34,15 +34,14 @@ The Vindicta Platform is a comprehensive ecosystem for competitive tabletop warg
 | WARScribe-Core | v0.1.5 | Schema refinement, edition abstraction |
 | Platform-Docs | v0.1.5 | Theme config, GitHub Pages deployment |
 
-### Week 2: Feb 11-17 — Core Feature Development
+### Week 2: Feb 11-17 — Substantiation Sprint
 | Product | Target | Key Deliverable |
 |---------|--------|-----------------|
-| Vindicta-Portal | — | Auth integration, List Grader MVP |
-| WARScribe-Core | v0.2.0 | Edition plugin system, 10th Ed support |
-| Meta-Oracle | v0.1.0 | DebateEngine, stub agents |
-| Primordia AI | v0.1.0 | State encoding, heuristic evaluation |
-| WARScribe-Parser | v0.1.5 | BattleScribe XML, ROS, JSON parsers |
-| Logi-Slate-UI | — | React/Zustand foundation, design system |
+| WARScribe-Parser | v0.1.5 | **[P0]** Functional ROS parsing to `Vindicta-Core` JSON |
+| Meta-Oracle | v0.1.0 | **[P0]** Rule-Sage Agent with Vector Search (Bases rules) |
+| Primordia AI | v0.1.0 | **[P1]** DuckDB Opening Book with historical similarity search |
+| Vindicta-Portal | — | **[P1]** Shell integration for Meta-Oracle Rule-Sage |
+| Logi-Slate-UI | — | **[P2]** Battle Reporting React view (Mobile-First) |
 
 ### Week 3: Feb 18-24 — Integration Sprint
 | Product | Target | Key Deliverable |
@@ -54,14 +53,13 @@ The Vindicta Platform is a comprehensive ecosystem for competitive tabletop warg
 | Vindicta-Core | — | Module extraction, standalone modules |
 | Battle-Transcript-Toolkit | v0.1.0 | Pydantic schemas, data models |
 
-### Week 4: Feb 25 - Mar 3 — AI Sprint
+### Week 4: Feb 25 - Mar 3 — AI & UX Sprint
 | Product | Target | Key Deliverable |
 |---------|--------|-----------------|
-| Meta-Oracle | v0.2.0 | All 5 agents active (Home, Adversary, Arbiter, Rule-Sage) |
-| Primordia AI | — | MCTS foundation, search depth |
-| WARScribe-Parser | v0.2.0 | Whisper integration, audio pipeline |
-| Logi-Slate-UI | v0.1.5 | Game tracker, turn entry, WARScribe export |
-| Vindicta-API | — | Auth middleware, rate limiting |
+| Meta-Oracle | v0.2.0 | All 5 agents active; **[P0]** List Grader API (Synergy Scoring) |
+| Primordia AI | — | MCTS foundation, search depth optimized for performance |
+| Logi-Slate-UI | v0.1.5 | **[P0]** Warscribe page replacement implementation |
+| Vindicta-API | v0.2.0 | **[P1]** Multi-Product Auth & Metered Quotas (Auditor-SDK) |
 
 ### Week 5: Mar 4-10 — Polish & Integration
 | Product | Target | Key Deliverable |
