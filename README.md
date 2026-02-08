@@ -21,6 +21,16 @@ Organization-wide GitHub configuration, templates, and roadmap for the **Vindict
 | Vindicta-API | v0.1.0 | v1.0.0 | Mar 14, 2026 |
 | Vindicta-Core | v0.1.0 | v1.0.0 | Mar 13, 2026 |
 
+## Platform Documentation
+
+> **📌 Important:** All cross-cutting decisions, feature proposals, and platform-wide architecture documentation live in [**Platform-Docs**](https://github.com/vindicta-platform/Platform-Docs).
+>
+> Any decision affecting multiple repos **must** be recorded there before implementation.
+
+- 📋 [Feature Proposals](https://github.com/vindicta-platform/Platform-Docs/tree/main/docs/proposals)
+- 🏗️ [Architecture Decisions](https://github.com/vindicta-platform/Platform-Docs/tree/main/docs)
+- 📖 [Contributing Guide](https://github.com/vindicta-platform/Platform-Docs/blob/main/CONTRIBUTING.md)
+
 ---
 
 *Maintained by the Vindicta Platform Product Owner*
