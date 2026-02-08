@@ -1,7 +1,21 @@
+# .github Pre-Commit Configuration
+# Profile: universal-minimal
+# Phase 1: Lockdown — file hygiene, format safety, markdown lint
+
 repos:
-  - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.12.2
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
     hooks:
-      - id: markdown-link-check
-        args: ['--config', '.markdown-link-check.json']
-        types: [markdown]
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.17.2
+    hooks:
+      - id: markdownlint-cli2
+        args: []
