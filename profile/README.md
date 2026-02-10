@@ -15,10 +15,10 @@
 ## 🚀 Quick Start
 
 ```bash
-# Install core packages via uv
-uv pip install git+https://github.com/vindicta-platform/Vindicta-Core.git
-uv pip install git+https://github.com/vindicta-platform/WARScribe-Core.git
-uv pip install git+https://github.com/vindicta-platform/Dice-Engine.git
+# Install domain packages via uv
+uv pip install git+https://github.com/vindicta-platform/vindicta-foundation.git
+uv pip install git+https://github.com/vindicta-platform/vindicta-engine.git
+uv pip install git+https://github.com/vindicta-platform/warscribe-system.git
 ```
 
 ```bash
@@ -29,53 +29,36 @@ cd Vindicta-Portal && npm install && npm run dev
 
 ---
 
-## 📦 Repository Navigator
+## 📦 Domain Contexts
 
-### P0: User-Facing Entry Point
+The platform is organized into **7 domain-driven meso-repos**, each owning a single bounded context.
 
-| Repository                                                                  | Description                                                  | Status   |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------ | -------- |
-| [**Vindicta-Portal**](https://github.com/vindicta-platform/Vindicta-Portal) | Web gateway for Army Grading, Meta Analysis & Game Recording | 🟡 Active |
+| Domain         | Repository                                                                                                                                  | Responsibility                              | Stack                          |
+| :------------- | :------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------ | :----------------------------- |
+| **Foundation** | [vindicta-foundation](https://github.com/vindicta-platform/vindicta-foundation)                                                             | Base models, Architecture, Centralized Docs | Python 3.12, Pydantic V2, `uv` |
+| **Engine**     | [vindicta-engine](https://github.com/vindicta-platform/vindicta-engine)                                                                     | Physics, Dice, Entropy, AI Core             | Python 3.12, Pydantic V2, `uv` |
+| **Scribe**     | [warscribe-system](https://github.com/vindicta-platform/warscribe-system)                                                                   | WARScribe Notation, Parsing, Transcripts    | Python 3.12, Pydantic V2, `uv` |
+| **Economy**    | [vindicta-economy](https://github.com/vindicta-platform/vindicta-economy)                                                                   | Ledger, GasTank, Quotas, Metering           | Python 3.12, Pydantic V2, `uv` |
+| **Oracle**     | [vindicta-oracle](https://github.com/vindicta-platform/vindicta-oracle)                                                                     | Prediction, Debate Council, ML              | Python 3.12, Pydantic V2, `uv` |
+| **Platform**   | [Vindicta-Portal](https://github.com/vindicta-platform/Vindicta-Portal) / [Vindicta-API](https://github.com/vindicta-platform/Vindicta-API) | Frontend Portal & API Gateway               | Vite 7+ / FastAPI              |
+| **Agents**     | [Vindicta-Agents](https://github.com/vindicta-platform/Vindicta-Agents)                                                                     | SDKs, Workflows, Swarm Orchestration        | Python 3.12, Pydantic V2, `uv` |
 
 ---
 
 <details>
-<summary><strong>P1: Core Platform</strong> — Tactical Engines & AI</summary>
+<summary><strong>📁 Archived Legacy Repos</strong> — Consolidated into meso-repos above</summary>
 
-| Repository                                                                  | Description                                              | Status       |
-| --------------------------------------------------------------------------- | -------------------------------------------------------- | ------------ |
-| [WARScribe-Core](https://github.com/vindicta-platform/WARScribe-Core)       | Edition-agnostic notation engine (10th/11th Edition)     | 🟢 Foundation |
-| [Primordia-AI](https://github.com/vindicta-platform/Primordia-AI)           | Deterministic tactical engine ("Stockfish of Warhammer") | 🟢 Foundation |
-| [Meta-Oracle](https://github.com/vindicta-platform/Meta-Oracle)             | AI Council for meta predictions & adversarial reasoning  | 🟢 Foundation |
-| [Agent-Auditor-SDK](https://github.com/vindicta-platform/Agent-Auditor-SDK) | Quota-aware AI scheduling framework                      | 🟢 v0.1.0     |
-| [Vindicta-API](https://github.com/vindicta-platform/Vindicta-API)           | Central REST gateway (FastAPI)                           | 🟡 Active     |
-| [Vindicta-Core](https://github.com/vindicta-platform/Vindicta-Core)         | Shared domain schemas & interface contracts              | 🟢 Foundation |
+The following repositories have been archived as part of the [008-platform-consolidation](https://github.com/vindicta-platform/.specify). Their code now lives in the domain contexts above.
 
-</details>
-
-<details>
-<summary><strong>P2: Supporting Products</strong> — Integration & UI</summary>
-
-| Repository                                                                                  | Description                                            | Status       |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------ |
-| [WARScribe-Parser](https://github.com/vindicta-platform/WARScribe-Parser)                   | Multimodal data ingestion (rosters, audio, video)      | 🟢 Foundation |
-| [Logi-Slate-UI](https://github.com/vindicta-platform/Logi-Slate-UI)                         | React/TypeScript tactical frontend (Glass-Neon design) | 🟡 Active     |
-| [Battle-Transcript-Toolkit](https://github.com/vindicta-platform/Battle-Transcript-Toolkit) | NLP event extraction & game state reconstruction       | 🔴 Scaffold   |
-
-</details>
-
-<details>
-<summary><strong>P3: Infrastructure & Utilities</strong></summary>
-
-| Repository                                                                | Description                                     | Status       |
-| ------------------------------------------------------------------------- | ----------------------------------------------- | ------------ |
-| [Dice-Engine](https://github.com/vindicta-platform/Dice-Engine)           | Statistical dice roller with rejection sampling | ✅ v1.0.0     |
-| [Entropy-Buffer](https://github.com/vindicta-platform/Entropy-Buffer)     | CSPRNG entropy pool manager                     | ✅ v1.0.0     |
-| [Economy-Engine](https://github.com/vindicta-platform/Economy-Engine)     | Credit-based "Gas Tank" usage model             | 🟢 Scaffold   |
-| [Atomic-Ledger-Py](https://github.com/vindicta-platform/Atomic-Ledger-Py) | Tamper-proof financial ledger                   | 🟢 Foundation |
-| [Audit-Log-Pro](https://github.com/vindicta-platform/Audit-Log-Pro)       | Dual-sink transactional logging                 | 🔴 Scaffold   |
-| [Platform-Docs](https://github.com/vindicta-platform/Platform-Docs)       | MkDocs Material documentation site              | 🟢 Active     |
-| [Vindicta-CLI](https://github.com/vindicta-platform/Vindicta-CLI)         | Unified command-line interface                  | 🔴 Scaffold   |
+| Legacy Repository                                                          | Consolidated Into          |
+| :------------------------------------------------------------------------- | :------------------------- |
+| Vindicta-Core                                                              | vindicta-foundation        |
+| Dice-Engine, Entropy-Buffer, Primordia-AI                                  | vindicta-engine            |
+| WARScribe-Core, WARScribe-Parser, WARScribe-CLI, Battle-Transcript-Toolkit | warscribe-system           |
+| Economy-Engine, Atomic-Ledger-Py, Metered-SaaS-Logic, Quota-Manager        | vindicta-economy           |
+| Meta-Oracle, Arbiter-Predictor                                             | vindicta-oracle            |
+| Agent-Auditor-SDK, Audit-Log-Pro                                           | Vindicta-Agents            |
+| Logi-Slate-UI, Vindicta-CLI                                                | Vindicta-Portal (Platform) |
 
 </details>
 
@@ -84,9 +67,9 @@ cd Vindicta-Portal && npm install && npm run dev
 ## 🔗 Developer Resources
 
 | Resource                | Link                                                                                                                               |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| :---------------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
 | 📚 **Documentation**     | [Platform-Docs](https://vindicta-platform.github.io/Platform-Docs/)                                                                |
-| 🗺️ **Roadmap**           | [6-Week Release Schedule](https://github.com/vindicta-platform/.github/blob/main/ROADMAP.md)                                       |
+| 🗺️ **Roadmap**           | [Release Schedule](https://github.com/vindicta-platform/.github/blob/main/ROADMAP.md)                                              |
 | 📋 **PR Dashboard**      | [GitHub Projects](https://github.com/orgs/vindicta-platform/projects/3)                                                            |
 | 🏷️ **Good First Issues** | [Search across repos](https://github.com/search?q=org%3Avindicta-platform+label%3A%22good+first+issue%22+state%3Aopen&type=issues) |
 
@@ -105,7 +88,7 @@ We welcome contributions! Each repository follows **Spec-Driven Development** pa
 
 <div align="center">
 
-**Status Legend:** ✅ Production &nbsp;|&nbsp; 🟢 Foundation &nbsp;|&nbsp; 🟡 Active Development &nbsp;|&nbsp; 🔴 Scaffold
+**Status Legend:** ✅ Active &nbsp;|&nbsp; 🟡 Beta &nbsp;|&nbsp; 📦 Archived
 
 *Built with 🎲 by the Vindicta Team*
 
