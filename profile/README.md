@@ -4,7 +4,7 @@
 
 *Provably fair competitive gaming, powered by cryptographically auditable mechanics and AI-driven strategic insights.*
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Launch%20Portal-FF0000?style=for-the-badge&logo=firebase)](https://vindicta-platform.web.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Launch%20Portal-FF0000?style=for-the-badge&logo=firebase)](https://vindicta-warhammer.web.app)
 <br/>
 [![Documentation](https://img.shields.io/badge/docs-Platform--Docs-7000ff?style=flat-square)](https://vindicta-platform.github.io/Platform-Docs/)
 [![Roadmap](https://img.shields.io/badge/roadmap-v1.0.0%20Mar%202026-FFD700?style=flat-square)](https://github.com/vindicta-platform/.github/blob/main/ROADMAP.md)
