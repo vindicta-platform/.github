@@ -1,7 +1,7 @@
 # Vindicta Platform — Master Roadmap
 
-> **Last Updated**: 2026-02-08  
-> **Timeframe**: Feb 4 - Mar 17, 2026 (6 Weeks)  
+> **Last Updated**: 2026-02-10
+> **Timeframe**: Feb 4 - Mar 17, 2026 (6 Weeks)
 > **GitHub Organization**: https://github.com/vindicta-platform/
 
 ---
@@ -10,74 +10,83 @@
 
 *"Provably fair competitive gaming, powered by cryptographically auditable mechanics and AI-driven strategic insights."*
 
-The Vindicta Platform is a comprehensive ecosystem for competitive tabletop wargaming, providing tools for game tracking, tactical AI analysis, and community engagement.
+The Vindicta Platform is a comprehensive ecosystem for competitive tabletop wargaming, providing tools for game tracking, tactical AI analysis, and community engagement. The platform is organized into **7 domain-driven meso-repos**.
 
 ---
 
-## 📊 Product Portfolio Overview
+## 📊 Domain Portfolio Overview
 
-| Tier | Products | Focus % | 6-Week Target |
-|------|----------|---------|---------------|
-| **P0: Value-Add** | WARScribe-Parser, Meta-Oracle, Primordia AI | 40% | v0.2.0 (Functional Logic) |
-| **P1: User-Facing** | Vindicta-Portal | 25% | v1.0.0 (Integration Layer) |
-| **P2: INFRASTRUCTURE** | Agent-Auditor-SDK, Vindicta-API, Vindicta-Core | 25% | v0.2.0+ (Maturity) |
-| **P3: Supporting** | Logi-Slate-UI, Battle-Transcript-Toolkit, Utilities | 10% | v0.1.0-v0.2.0 |
+| Domain Context | Repository                                                                                                                                  | Focus                           | Status   |
+| :------------- | :------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------ | :------- |
+| **Foundation** | [vindicta-foundation](https://github.com/vindicta-platform/vindicta-foundation)                                                             | Base models, Architecture, Docs | ✅ Active |
+| **Engine**     | [vindicta-engine](https://github.com/vindicta-platform/vindicta-engine)                                                                     | Physics, Dice, Entropy, AI Core | ✅ Active |
+| **Scribe**     | [warscribe-system](https://github.com/vindicta-platform/warscribe-system)                                                                   | Notation, Parsing, Transcripts  | ✅ Active |
+| **Economy**    | [vindicta-economy](https://github.com/vindicta-platform/vindicta-economy)                                                                   | Ledger, GasTank, Quotas         | ✅ Active |
+| **Oracle**     | [vindicta-oracle](https://github.com/vindicta-platform/vindicta-oracle)                                                                     | ML, Prediction, Debate Council  | 🟡 Beta   |
+| **Platform**   | [Vindicta-Portal](https://github.com/vindicta-platform/Vindicta-Portal) / [Vindicta-API](https://github.com/vindicta-platform/Vindicta-API) | Frontend & API Gateway          | 🟡 Active |
+| **Agents**     | [Vindicta-Agents](https://github.com/vindicta-platform/Vindicta-Agents)                                                                     | SDKs, Workflows, Swarm          | ✅ Active |
 
 ---
 
 ## 🗓️ 6-Week Release Schedule
 
-### Week 1: Feb 4-10 — Foundation Sprint
-| Product | Target | Key Deliverable |
-|---------|--------|-----------------|
-| Vindicta-Portal | v0.1.0 | Firebase config, design system, mobile layout |
-| WARScribe-Core | v0.1.5 | Schema refinement, edition abstraction |
-| Platform-Docs | v0.1.5 | Theme config, GitHub Pages deployment |
+### Week 1: Feb 4-10 — Foundation & Consolidation Sprint ✅
 
-### Week 2: Feb 11-17 — Substantiation Sprint
-| Product | Target | Key Deliverable |
-|---------|--------|-----------------|
-| WARScribe-Parser | v0.1.5 | **[P0]** Functional ROS parsing to `Vindicta-Core` JSON |
-| Meta-Oracle | v0.1.0 | **[P0]** Rule-Sage Agent with Vector Search (Bases rules) |
-| Primordia AI | v0.1.0 | **[P1]** DuckDB Opening Book with historical similarity search |
-| Vindicta-Portal | — | **[P1]** Shell integration for Meta-Oracle Rule-Sage |
-| Logi-Slate-UI | — | **[P2]** Battle Reporting React view (Mobile-First) |
+| Domain     | Key Deliverable                                       | Status     |
+| :--------- | :---------------------------------------------------- | :--------- |
+| **All**    | Platform consolidation (008): 29 repos → 7 meso-repos | ✅ Complete |
+| Foundation | `VindictaModel` base, Architecture docs, C4 diagrams  | ✅ Complete |
+| Engine     | Dice engine, Entropy buffer, AI core ported           | ✅ Complete |
+| Scribe     | WARScribe notation, parser, transcripts ported        | ✅ Complete |
+| Economy    | Ledger, GasTank, transactions ported                  | ✅ Complete |
+| Oracle     | Debate Council, prediction models ported              | ✅ Complete |
+| Agents     | Agent-Auditor SDK, workflows ported                   | ✅ Complete |
+| Portal     | Firebase config, design system, CI/CD pipeline        | ✅ Complete |
+
+### Week 2: Feb 11-17 — Feature Development
+
+| Domain | Key Deliverable                                    |
+| :----- | :------------------------------------------------- |
+| Scribe | Score output pipeline (010-warscribe-score-output) |
+| Engine | AI evaluation refinement, physics engine           |
+| Oracle | DebateEngine activation, stub agents               |
+| Portal | Auth integration, List Grader MVP                  |
 
 ### Week 3: Feb 18-24 — Integration Sprint
-| Product | Target | Key Deliverable |
-|---------|--------|-----------------|
-| Vindicta-Portal | v0.2.0 | Meta Snapshot, Upset Detector |
-| Agent-Auditor-SDK | v0.2.0 | Quota prediction, SQLite journal |
-| Primordia AI | v0.1.5 | Opening Book database |
-| Vindicta-API | — | FastAPI scaffold, dice/oracle endpoints |
-| Vindicta-Core | — | Module extraction, standalone modules |
-| Battle-Transcript-Toolkit | v0.1.0 | Pydantic schemas, data models |
 
-### Week 4: Feb 25 - Mar 3 — AI & UX Sprint
-| Product | Target | Key Deliverable |
-|---------|--------|-----------------|
-| Meta-Oracle | v0.2.0 | All 5 agents active; **[P0]** List Grader API (Synergy Scoring) |
-| Primordia AI | — | MCTS foundation, search depth optimized for performance |
-| Logi-Slate-UI | v0.1.5 | **[P0]** Warscribe page replacement implementation |
-| Vindicta-API | v0.2.0 | **[P1]** Multi-Product Auth & Metered Quotas (Auditor-SDK) |
+| Domain   | Key Deliverable                                |
+| :------- | :--------------------------------------------- |
+| Platform | API scaffold, dice/oracle endpoints            |
+| Agents   | Quota prediction, SQLite journal               |
+| Scribe   | Battle analysis pipeline (011-battle-analysis) |
+| Economy  | Metering integration                           |
+
+### Week 4: Feb 25 - Mar 3 — AI Sprint
+
+| Domain   | Key Deliverable                |
+| :------- | :----------------------------- |
+| Oracle   | All debate agents active       |
+| Engine   | MCTS foundation, search depth  |
+| Scribe   | Audio pipeline integration     |
+| Platform | Auth middleware, rate limiting |
 
 ### Week 5: Mar 4-10 — Polish & Integration
-| Product | Target | Key Deliverable |
-|---------|--------|-----------------|
-| Agent-Auditor-SDK | v0.3.0 | Full integration with Meta-Oracle, Primordia, WARScribe |
-| Primordia AI | v0.2.0 | MCTS engine, 3+ move depth |
-| Vindicta-Portal | — | Game Tracker MVP, PWA setup |
-| Vindicta-Core | — | API contracts, PyPI preparation |
-| Vindicta-API | v0.2.0 | Integration tests, OpenAPI docs |
+
+| Domain   | Key Deliverable                              |
+| :------- | :------------------------------------------- |
+| Agents   | Full integration with Oracle, Engine, Scribe |
+| Engine   | MCTS engine, 3+ move depth                   |
+| Portal   | Game Tracker MVP, PWA setup                  |
+| Platform | Integration tests, OpenAPI docs              |
 
 ### Week 6: Mar 11-17 — v1.0 Release Week ⭐
-| Product | Target | Key Deliverable |
-|---------|--------|-----------------|
-| **Vindicta-Portal** | **v1.0.0** | PWA install, Primordia overlay, production ready |
-| **Vindicta-API** | **v1.0.0** | Rate limits, Free Tier compliance, full docs |
-| **Vindicta-Core** | **v1.0.0** | 90%+ test coverage, PyPI publication |
-| Meta-Oracle | v0.3.0 | List Grader API, Upset Detector |
-| Logi-Slate-UI | v0.2.0 | AI overlay, Replay player |
+
+| Domain         | Key Deliverable                              |
+| :------------- | :------------------------------------------- |
+| **Portal**     | PWA install, AI overlay, production ready    |
+| **Platform**   | Rate limits, Free Tier compliance, full docs |
+| **Foundation** | 90%+ test coverage                           |
+| Oracle         | List Grader API, Upset Detector              |
 
 ---
 
@@ -87,72 +96,37 @@ The Vindicta Platform is a comprehensive ecosystem for competitive tabletop warg
 gantt
     title Vindicta Platform 6-Week Roadmap
     dateFormat  YYYY-MM-DD
-    section Portal
-    v0.1.0 Foundation      :done, p1, 2026-02-04, 7d
-    v0.2.0 Features        :p2, 2026-02-11, 14d
-    v1.0.0 Production      :milestone, p3, 2026-03-15, 0d
-    section WARScribe-Core
-    v0.1.5 Schema          :done, w1, 2026-02-04, 7d
-    v0.2.0 Edition Layer   :w2, 2026-02-11, 7d
-    section Primordia AI
-    v0.1.0 Foundation      :ai1, 2026-02-04, 14d
-    v0.1.5 Opening Book    :ai2, 2026-02-18, 7d
-    v0.2.0 MCTS            :ai3, 2026-02-25, 14d
-    section Meta-Oracle
-    v0.1.0 Foundation      :mo1, 2026-02-11, 7d
-    v0.2.0 Agents          :mo2, 2026-02-25, 7d
-    v0.3.0 Features        :mo3, 2026-03-11, 7d
-    section Agent-Auditor
-    v0.2.0 Prediction      :aa1, 2026-02-18, 7d
-    v0.3.0 Integration     :aa2, 2026-03-04, 7d
+    section Foundation
+    Consolidation          :done, f1, 2026-02-04, 7d
+    Docs & Architecture    :f2, 2026-02-11, 14d
+    section Engine
+    Core Porting           :done, e1, 2026-02-04, 7d
+    AI Evaluation          :e2, 2026-02-11, 14d
+    MCTS Engine            :e3, 2026-02-25, 14d
+    section Scribe
+    System Porting         :done, s1, 2026-02-04, 7d
+    Score Output           :s2, 2026-02-11, 7d
+    Battle Analysis        :s3, 2026-02-18, 7d
+    section Oracle
+    Domain Porting         :done, o1, 2026-02-04, 7d
+    Debate Agents          :o2, 2026-02-11, 14d
+    List Grader            :o3, 2026-03-11, 7d
+    section Platform
+    Portal v0.1            :done, p1, 2026-02-04, 7d
+    API + Auth             :p2, 2026-02-18, 14d
+    v1.0 Release           :milestone, p3, 2026-03-15, 0d
 ```
-
----
-
-## 📦 Product Links
-
-### Tier 1: Primary Products
-| Product | Repository | Status |
-|---------|------------|--------|
-| Vindicta-Portal | [vindicta-platform/Vindicta-Portal](https://github.com/vindicta-platform/Vindicta-Portal) | 🟡 Active |
-| WARScribe-Core | [vindicta-platform/WARScribe-Core](https://github.com/vindicta-platform/WARScribe-Core) | 🟢 Foundation |
-| Primordia AI | [vindicta-platform/Primordia-AI](https://github.com/vindicta-platform/Primordia-AI) | 🟢 Foundation |
-| Meta-Oracle | [vindicta-platform/Meta-Oracle](https://github.com/vindicta-platform/Meta-Oracle) | 🟢 Foundation |
-| Agent-Auditor-SDK | [vindicta-platform/Agent-Auditor-SDK](https://github.com/vindicta-platform/Agent-Auditor-SDK) | 🟢 v0.1.0 Released |
-
-### Tier 2: Supporting Products
-| Product | Repository | Status |
-|---------|------------|--------|
-| WARScribe-Parser | [vindicta-platform/WARScribe-Parser](https://github.com/vindicta-platform/WARScribe-Parser) | 🟢 Foundation |
-| Battle-Transcript-Toolkit | [vindicta-platform/Battle-Transcript-Toolkit](https://github.com/vindicta-platform/Battle-Transcript-Toolkit) | 🔴 Scaffold |
-| Logi-Slate-UI | [vindicta-platform/Logi-Slate-UI](https://github.com/vindicta-platform/Logi-Slate-UI) | 🟡 Active |
-| Vindicta-API | [vindicta-platform/Vindicta-API](https://github.com/vindicta-platform/Vindicta-API) | 🟡 Active |
-| Vindicta-Core | [vindicta-platform/Vindicta-Core](https://github.com/vindicta-platform/Vindicta-Core) | 🟢 Foundation |
-
-### Tier 3: Infrastructure & Utilities
-| Product | Repository | Status |
-|---------|------------|--------|
-| Dice-Engine | [vindicta-platform/Dice-Engine](https://github.com/vindicta-platform/Dice-Engine) | ✅ v1.0.0 |
-| Entropy-Buffer | [vindicta-platform/Entropy-Buffer](https://github.com/vindicta-platform/Entropy-Buffer) | ✅ v1.0.0 |
-| Economy-Engine | [vindicta-platform/Economy-Engine](https://github.com/vindicta-platform/Economy-Engine) | 🟢 P3 Scaffold |
-| Atomic-Ledger-Py | [vindicta-platform/Atomic-Ledger-Py](https://github.com/vindicta-platform/Atomic-Ledger-Py) | 🟢 Foundation |
-| Audit-Log-Pro | [vindicta-platform/Audit-Log-Pro](https://github.com/vindicta-platform/Audit-Log-Pro) | 🔴 Scaffold |
-| Platform-Docs | [vindicta-platform/Platform-Docs](https://github.com/vindicta-platform/Platform-Docs) | 🟢 Active |
-| Vindicta-CLI | [vindicta-platform/Vindicta-CLI](https://github.com/vindicta-platform/Vindicta-CLI) | 🔴 Scaffold |
-| WARScribe-CLI | [vindicta-platform/WARScribe-CLI](https://github.com/vindicta-platform/WARScribe-CLI) | 🔴 Scaffold |
-| Metered-SaaS-Logic | [vindicta-platform/Metered-SaaS-Logic](https://github.com/vindicta-platform/Metered-SaaS-Logic) | ⚫ Deferred |
-| Quota-Manager | [vindicta-platform/Quota-Manager](https://github.com/vindicta-platform/Quota-Manager) | ⚫ Deprecated |
 
 ---
 
 ## 📈 Success Metrics
 
-| Metric | Target | Deadline |
-|--------|--------|----------|
-| Portal Lighthouse Score | ≥95 | Mar 15 |
-| Test Coverage (Core products) | ≥80% | Mar 15 |
-| v1.0.0 Releases | 3 products | Mar 15 |
-| GitHub Stars (org total) | 100 | Mar 31 |
+| Metric                       | Target       | Deadline |
+| :--------------------------- | :----------- | :------- |
+| Portal Lighthouse Score      | ≥95          | Mar 15   |
+| Test Coverage (Core domains) | ≥80%         | Mar 15   |
+| v1.0.0 Releases              | 3 domains    | Mar 15   |
+| Meso-repo consolidation      | 7/7 complete | ✅ Done   |
 
 ---
 

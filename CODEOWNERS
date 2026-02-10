@@ -1,0 +1,22 @@
+# Code Owners for .specify Repository
+
+# Default owners for everything
+* @vindicta-platform/architects
+
+# Constitution requires architect review
+/CONSTITUTION.md @vindicta-platform/architects
+
+# Templates can be modified by contributors
+/templates/ @vindicta-platform/contributors @vindicta-platform/architects
+
+# Workflows require architect review
+/workflows/ @vindicta-platform/architects
+
+# Memory system is critical
+/memory/ @vindicta-platform/architects
+
+# Documentation is open for contributions
+/docs/ @vindicta-platform/contributors
+
+# Examples can be modified freely
+/examples/ @vindicta-platform/contributors
