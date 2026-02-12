@@ -6,7 +6,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Launch%20Portal-FF0000?style=for-the-badge&logo=firebase)](https://vindicta-warhammer.web.app)
 <br/>
-[![Documentation](https://img.shields.io/badge/docs-Platform--Docs-7000ff?style=flat-square)](https://vindicta-platform.github.io/Platform-Docs/)
+[![Documentation](https://img.shields.io/badge/docs-Foundation-7000ff?style=flat-square)](https://vindicta-platform.github.io/vindicta-foundation/)
 [![Roadmap](https://img.shields.io/badge/roadmap-v1.0.0%20Mar%202026-FFD700?style=flat-square)](https://github.com/vindicta-platform/.github/blob/main/ROADMAP.md)
 [![PR Dashboard](https://img.shields.io/badge/PRs-Dashboard-00ff88?style=flat-square)](https://github.com/orgs/vindicta-platform/projects/3)
 
@@ -62,13 +62,13 @@ uv run examples/warscribe_actions.py
 
 Join the development squad that matches your skills and interests.
 
-| Class                | Skills                    | Quest                                          | Realm                                                                     |
-| :------------------- | :------------------------ | :--------------------------------------------- | :------------------------------------------------------------------------ |
-| **Tech-Priest**      | Python, Math, Probability | Build the physics engine and entropy proofs.   | [vindicta-engine](https://github.com/vindicta-platform/vindicta-engine)   |
-| **Logos Historian**  | NLP, Vision, Parsing      | Decode WARScribe notation and parse rosters.   | [warscribe-system](https://github.com/vindicta-platform/warscribe-system) |
-| **Meta-Seer**        | ML, Data Science, Stats   | Train predictive models and evaluating lists.  | [vindicta-oracle](https://github.com/vindicta-platform/vindicta-oracle)   |
-| **Void Banker**      | DeFi, Ledgers, SQL        | Manage the atomic economy and gas tanks.       | [vindicta-economy](https://github.com/vindicta-platform/vindicta-economy) |
-| **Portal Architect** | React, UX/UI, Design      | Craft the player experience and visualization. | [Vindicta-Portal](https://github.com/vindicta-platform/Vindicta-Portal)   |
+| Class                | Skills                    | Quest                                          | Realm                                                                       |
+| :------------------- | :------------------------ | :--------------------------------------------- | :-------------------------------------------------------------------------- |
+| **Tech-Priest**      | Python, Math, Probability | Build the physics engine and entropy proofs.   | [vindicta-engine](https://github.com/vindicta-platform/vindicta-engine)     |
+| **Logos Historian**  | NLP, Vision, Parsing      | Decode WARScribe notation and parse rosters.   | [warscribe-system](https://github.com/vindicta-platform/warscribe-system)   |
+| **Meta-Seer**        | ML, Data Science, Stats   | Train predictive models and evaluating lists.  | [vindicta-oracle](https://github.com/vindicta-platform/vindicta-oracle)     |
+| **Void Banker**      | DeFi, Ledgers, SQL        | Manage the atomic economy and gas tanks.       | [vindicta-economy](https://github.com/vindicta-platform/vindicta-economy)   |
+| **Portal Architect** | React, Vite, CSS          | Craft the player experience and visualization. | [vindicta-platform](https://github.com/vindicta-platform/vindicta-platform) |
 
 ---
 
@@ -81,18 +81,19 @@ Join the development squad that matches your skills and interests.
 | **Scribe**     | [warscribe-system](https://github.com/vindicta-platform/warscribe-system)       | ✅ Active | Python 3.12, Pydantic V2 |
 | **Economy**    | [vindicta-economy](https://github.com/vindicta-platform/vindicta-economy)       | ✅ Active | Python 3.12, Pydantic V2 |
 | **Oracle**     | [vindicta-oracle](https://github.com/vindicta-platform/vindicta-oracle)         | 🟡 Beta   | Python 3.12, Pydantic V2 |
-| **Platform**   | [Vindicta-Portal](https://github.com/vindicta-platform/Vindicta-Portal)         | 🟡 Active | Vite 7+, Cloud Run       |
-| **Agents**     | [Vindicta-Agents](https://github.com/vindicta-platform/Vindicta-Agents)         | ✅ Active | Python 3.12, Pydantic V2 |
+| **Platform**   | [vindicta-platform](https://github.com/vindicta-platform/vindicta-platform)     | ✅ Active | Vite 7+, Cloud Run       |
+| **Agents**     | [vindicta-agents](https://github.com/vindicta-platform/vindicta-agents)         | ✅ Active | Python 3.12, Pydantic V2 |
 
 <details>
 <summary><strong>📁 Archived Legacy Repos</strong></summary>
 
 The following repositories have been consolidated into the domain contexts above:
-*   `Vindicta-Core` → `vindicta-foundation`
-*   `Dice-Engine`, `Primordia-AI` → `vindicta-engine`
-*   `WARScribe-Core`, `WARScribe-Parser` → `warscribe-system`
-*   `Economy-Engine`, `Atomic-Ledger-Py` → `vindicta-economy`
-*   `Meta-Oracle` → `vindicta-oracle`
+*   `Vindicta-Core`, `Platform-Docs`, `platform-core` → `vindicta-foundation`
+*   `Dice-Engine`, `Primordia-AI`, `Entropy-Buffer` → `vindicta-engine`
+*   `WARScribe-Core`, `WARScribe-Parser`, `WARScribe-CLI`, `Battle-Transcript-Toolkit` → `warscribe-system`
+*   `Economy-Engine`, `Atomic-Ledger-Py`, `Quota-Manager` → `vindicta-economy`
+*   `Meta-Oracle`, `Arbiter-Predictor` → `vindicta-oracle`
+*   `Vindicta-API`, `Vindicta-Portal`, `Vindicta-CLI`, `Logi-Slate-UI` → `vindicta-platform`
 
 </details>
 
