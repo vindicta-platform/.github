@@ -1,4 +1,4 @@
-# Vindicta Platform Constitution
+# NEEDS UPDATE: Vindicta Platform Constitution
 
 *The governing principles for all development within the Vindicta Platform ecosystem.*
 
