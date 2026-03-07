@@ -25,7 +25,7 @@ jobs:
               type: 'public'
             });
 
-            const requiredFiles = ['LICENSE', 'SECURITY.md', 'CODE_OF_CONDUCT.md', 'CODEOWNERS'];
+            const requiredFiles = ['LICENSE', 'README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'CODE_OF_CONDUCT.md', 'CODEOWNERS'];
             const now = new Date();
             let report = `# 🩺 Org Health Scorecard\n\n`;
             report += `**Generated:** ${now.toISOString().slice(0, 10)}\n\n`;
