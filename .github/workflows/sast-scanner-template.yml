@@ -1,0 +1,66 @@
+name: Security SAST Scanner
+
+on:
+  workflow_call:
+
+concurrency:
+  group: sast-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: Static Analysis (Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for Python source
+        id: check
+        run: |
+          if [ -d "src" ] && find src -name '*.py' | head -1 | grep -q .; then
+            echo "has_python=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_python=false" >> $GITHUB_OUTPUT
+            echo "::notice::No Python source in src/, skipping SAST"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.has_python == 'true'
+        with:
+          python-version: '3.12'
+
+      - name: Install bandit
+        if: steps.check.outputs.has_python == 'true'
+        run: pip install bandit[toml]
+
+      - name: Run bandit scan
+        if: steps.check.outputs.has_python == 'true'
+        id: bandit
+        run: |
+          echo '### 🔒 SAST Report (Bandit)' >> $GITHUB_STEP_SUMMARY
+          bandit -r src/ -f json -o bandit_report.json --severity-level medium 2>&1 || true
+          bandit -r src/ -f txt --severity-level medium 2>&1 | tee bandit_output.txt || true
+
+          ISSUES=$(python3 -c "import json; r=json.load(open('bandit_report.json')); print(len(r.get('results',[])))") || echo 0
+          echo "issues=${ISSUES}" >> $GITHUB_OUTPUT
+          
+          if [ "$ISSUES" -gt 0 ]; then
+            echo "⚠️ **${ISSUES} security issue(s) found**" >> $GITHUB_STEP_SUMMARY
+            echo '' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -50 bandit_output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "::warning::Bandit found ${ISSUES} issues"
+          else
+            echo '✅ No security issues detected' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload SAST report
+        if: steps.check.outputs.has_python == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-report
+          path: |
+            bandit_report.json
+            bandit_output.txt
+          retention-days: 30

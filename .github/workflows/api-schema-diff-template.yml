@@ -1,0 +1,69 @@
+name: API Schema Diff
+
+on:
+  workflow_call:
+
+concurrency:
+  group: schema-diff-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diff:
+    name: Schema Change Detection
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect schema changes
+        id: detect
+        run: |
+          SCHEMA_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '(openapi|schema|api-spec)\.(ya?ml|json)$' || true)
+          if [ -z "$SCHEMA_FILES" ]; then
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "::notice::No API schema files changed"
+          else
+            echo "found=true" >> $GITHUB_OUTPUT
+            echo "files<<EOF" >> $GITHUB_OUTPUT
+            echo "$SCHEMA_FILES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate and post diff
+        if: steps.detect.outputs.found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const files = `${{ steps.detect.outputs.files }}`.trim().split('\n');
+            let report = '## 📊 API Schema Changes\n\n';
+
+            for (const file of files) {
+              const diff = execSync(`git diff origin/${{ github.base_ref }}...HEAD -- "${file}"`, { encoding: 'utf8' });
+              report += `### \`${file}\`\n\n\`\`\`diff\n${diff.slice(0, 5000)}\n\`\`\`\n\n`;
+            }
+
+            report += '> ⚠️ Please verify backward compatibility of these schema changes.';
+
+            // Deduplicate comments
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            const existing = comments.find(c => c.body.includes('API Schema Changes') && c.user.login === 'github-actions[bot]');
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body: report
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body: report
+              });
+            }
