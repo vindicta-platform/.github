@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/labels.yml'
+      - '.github/labels.json'
   workflow_dispatch:
 
 permissions:
@@ -23,24 +23,17 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const yaml = require('js-yaml');
-            
-            let labels;
-            try {
-              labels = yaml.load(fs.readFileSync('.github/labels.yml', 'utf8'));
-            } catch (e) {
-              core.setFailed(`Failed to parse labels.yml: ${e.message}`);
-              return;
-            }
-            
+            const labels = JSON.parse(fs.readFileSync('.github/labels.json', 'utf8'));
+
             const repos = await github.paginate(github.rest.repos.listForOrg, {
               org: 'vindicta-platform', type: 'public'
             });
-            
+
+            let synced = 0;
             for (const repo of repos) {
               if (repo.archived) continue;
               core.info(`Syncing labels to ${repo.name}...`);
-              
+
               for (const label of labels) {
                 try {
                   await github.rest.issues.getLabel({
@@ -57,5 +50,6 @@ jobs:
                   });
                 }
               }
+              synced++;
             }
-            core.notice(`Synced ${labels.length} labels across ${repos.filter(r => !r.archived).length} repos`);
+            core.notice(`Synced ${labels.length} labels across ${synced} repos`);
