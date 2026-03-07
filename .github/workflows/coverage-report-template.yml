@@ -1,0 +1,77 @@
+name: Coverage Report
+
+on:
+  workflow_call:
+
+concurrency:
+  group: coverage-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage-report:
+    name: Coverage Summary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for Python source files
+        id: check-python
+        run: |
+          if [ -d "src" ] || find . -name "*.py" -not -path "./.git/*" | head -1 | grep -q .; then
+            echo "has_python=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_python=false" >> $GITHUB_OUTPUT
+            echo "::notice::No Python source files found, skipping coverage"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check-python.outputs.has_python == 'true'
+        with:
+          python-version: '3.12'
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.check-python.outputs.has_python == 'true'
+
+      - name: Install dependencies
+        if: steps.check-python.outputs.has_python == 'true'
+        run: uv sync --all-extras 2>/dev/null || uv sync 2>/dev/null || true
+
+      - name: Run tests with coverage
+        if: steps.check-python.outputs.has_python == 'true'
+        id: cov
+        run: |
+          uv run pytest tests/ -v --tb=short --cov=src --cov-report=json --cov-report=term 2>&1 | tee coverage_output.txt || true
+          if [ -f coverage.json ]; then
+            TOTAL=$(python3 -c "import json; print(round(json.load(open('coverage.json'))['totals']['percent_covered']))")
+            echo "total=${TOTAL}" >> $GITHUB_OUTPUT
+            echo "### 📊 Coverage: ${TOTAL}%" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Post coverage to PR comment
+        if: github.event_name == 'pull_request' && steps.cov.outputs.total != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const total = '${{ steps.cov.outputs.total }}';
+            const emoji = total >= 90 ? '🟢' : total >= 70 ? '🟡' : '🔴';
+            const body = `## ${emoji} Coverage Report\n\n**Total: ${total}%**\n\n<details><summary>Full output</summary>\n\n\`\`\`\n${require('fs').readFileSync('coverage_output.txt', 'utf8').slice(-3000)}\n\`\`\`\n</details>`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            const existing = comments.find(c => c.body.includes('Coverage Report') && c.user.login === 'github-actions[bot]');
+            if (existing) {
+              await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body });
+            }
+
+      - name: Upload coverage artifact
+        if: steps.check-python.outputs.has_python == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.json
+            coverage_output.txt
+          retention-days: 30
