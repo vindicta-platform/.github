@@ -1,0 +1,69 @@
+name: CODEOWNERS Validator
+
+on:
+  workflow_call:
+
+jobs:
+  validate:
+    name: Validate CODEOWNERS
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check CODEOWNERS syntax and paths
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const glob = require('@actions/glob');
+
+            const coFiles = ['CODEOWNERS', '.github/CODEOWNERS', 'docs/CODEOWNERS'];
+            let codeownersPath = null;
+            for (const f of coFiles) {
+              if (fs.existsSync(f)) { codeownersPath = f; break; }
+            }
+
+            if (!codeownersPath) {
+              core.warning('No CODEOWNERS file found');
+              return;
+            }
+
+            const content = fs.readFileSync(codeownersPath, 'utf8');
+            const lines = content.split('\n');
+            const issues = [];
+            let ruleCount = 0;
+
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (!line || line.startsWith('#')) continue;
+              ruleCount++;
+
+              const parts = line.split(/\s+/);
+              if (parts.length < 2) {
+                issues.push(`Line ${i+1}: Missing owner for pattern \`${parts[0]}\``);
+                continue;
+              }
+
+              // Validate owners format
+              for (let j = 1; j < parts.length; j++) {
+                const owner = parts[j];
+                if (!owner.startsWith('@') && !owner.includes('/')) {
+                  issues.push(`Line ${i+1}: Invalid owner format \`${owner}\` (must be @user, @org/team, or email)`);
+                }
+              }
+            }
+
+            core.summary.addRaw(`### 📋 CODEOWNERS Validation\n\n`);
+            core.summary.addRaw(`- **File:** \`${codeownersPath}\`\n`);
+            core.summary.addRaw(`- **Rules:** ${ruleCount}\n`);
+
+            if (issues.length > 0) {
+              core.summary.addRaw(`- **Issues:** ${issues.length}\n\n`);
+              issues.forEach(i => core.summary.addRaw(`- ⚠️ ${i}\n`));
+              core.warning(`${issues.length} CODEOWNERS issue(s) found`);
+            } else {
+              core.summary.addRaw(`\n✅ All rules valid\n`);
+            }
+            await core.summary.write();

@@ -1,0 +1,64 @@
+name: Docs Build Verifier
+
+on:
+  workflow_call:
+
+concurrency:
+  group: docs-verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify Documentation Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for mkdocs config
+        id: check
+        run: |
+          if [ -f "mkdocs.yml" ] || [ -f "mkdocs.yaml" ]; then
+            echo "has_mkdocs=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_mkdocs=false" >> $GITHUB_OUTPUT
+            echo "::notice::No mkdocs config found, skipping docs build"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.has_mkdocs == 'true'
+        with:
+          python-version: '3.12'
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.check.outputs.has_mkdocs == 'true'
+
+      - name: Install dependencies
+        if: steps.check.outputs.has_mkdocs == 'true'
+        run: |
+          uv sync --all-extras 2>/dev/null || uv sync 2>/dev/null || true
+          uv pip install mkdocs-material mkdocs-awesome-pages-plugin 2>/dev/null || true
+
+      - name: Build docs (strict mode)
+        if: steps.check.outputs.has_mkdocs == 'true'
+        id: build
+        run: |
+          echo '### 📚 Docs Build Verification' >> $GITHUB_STEP_SUMMARY
+          if uv run mkdocs build --strict 2>&1 | tee mkdocs_build.txt; then
+            echo '✅ Documentation builds successfully in strict mode' >> $GITHUB_STEP_SUMMARY
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo '❌ Documentation build failed' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -30 mkdocs_build.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "::error::mkdocs build --strict failed"
+          fi
+
+      - name: Upload build log
+        if: steps.check.outputs.has_mkdocs == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-build-log
+          path: mkdocs_build.txt
+          retention-days: 14

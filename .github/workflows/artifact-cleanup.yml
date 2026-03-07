@@ -1,0 +1,69 @@
+name: Artifact Cleanup
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup:
+    name: Clean Old Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sweep artifacts across org
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.ORG_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            let repos;
+            try {
+              repos = await github.paginate(github.rest.repos.listForOrg, {
+                org: 'vindicta-platform', type: 'public'
+              });
+            } catch {
+              repos = [{ name: context.repo.repo }];
+            }
+
+            const cutoffMs = 14 * 24 * 60 * 60 * 1000; // 14 days
+            const now = Date.now();
+            let totalDeleted = 0;
+            let totalSaved = 0;
+
+            for (const repo of repos) {
+              if (repo.archived) continue;
+              try {
+                const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, {
+                  owner: 'vindicta-platform', repo: repo.name
+                });
+
+                for (const artifact of artifacts) {
+                  if (artifact.expired) continue;
+                  const ageMs = now - new Date(artifact.created_at).getTime();
+                  if (ageMs > cutoffMs) {
+                    try {
+                      await github.rest.actions.deleteArtifact({
+                        owner: 'vindicta-platform', repo: repo.name,
+                        artifact_id: artifact.id
+                      });
+                      totalDeleted++;
+                      totalSaved += artifact.size_in_bytes;
+                    } catch (e) {
+                      core.warning(`Failed to delete ${artifact.name} in ${repo.name}: ${e.message}`);
+                    }
+                  }
+                }
+              } catch (e) {
+                core.info(`Skipping ${repo.name}: ${e.message}`);
+              }
+            }
+
+            const savedMB = (totalSaved / (1024 * 1024)).toFixed(1);
+            core.summary.addRaw(`### 🧹 Artifact Cleanup\n\n`);
+            core.summary.addRaw(`- **Deleted:** ${totalDeleted} artifacts\n`);
+            core.summary.addRaw(`- **Recovered:** ${savedMB} MB\n`);
+            core.summary.addRaw(`- **Cutoff:** 14 days\n`);
+            await core.summary.write();
+            core.notice(`Deleted ${totalDeleted} artifacts, recovered ${savedMB} MB`);
