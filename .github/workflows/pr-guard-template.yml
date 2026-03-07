@@ -1,0 +1,79 @@
+name: PR Quality Guard Template
+
+on:
+  workflow_call:
+
+jobs:
+  pr-guard:
+    name: PR Quality Checks
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate PR title (conventional commits)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const pattern = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .+/;
+            if (!pattern.test(title)) {
+              core.setFailed(
+                `PR title "${title}" does not match conventional commits format.\n` +
+                `Expected: <type>(<scope>): <description>\n` +
+                `Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert`
+              );
+            } else {
+              core.notice(`PR title follows conventional commits: "${title}"`);
+            }
+
+      - name: Check PR size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100,
+            });
+            const totalChanges = files.reduce((sum, f) => sum + f.changes, 0);
+            if (totalChanges > 500) {
+              core.warning(
+                `⚠️ Large PR detected: ${totalChanges} lines changed across ${files.length} files. ` +
+                `Consider breaking this into smaller, focused PRs.`
+              );
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `⚠️ **Large PR Warning**: ${totalChanges} lines changed across ${files.length} files.\n\nConsider breaking this into smaller, focused PRs for easier review.`
+              });
+            } else {
+              core.notice(`PR size OK: ${totalChanges} lines changed across ${files.length} files`);
+            }
+
+      - name: Verify test coverage for src changes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100,
+            });
+            const srcFiles = files.filter(f => f.filename.startsWith('src/') && f.filename.endsWith('.py'));
+            const testFiles = files.filter(f =>
+              (f.filename.startsWith('tests/') || f.filename.startsWith('features/')) &&
+              (f.filename.endsWith('.py') || f.filename.endsWith('.feature'))
+            );
+            if (srcFiles.length > 0 && testFiles.length === 0) {
+              core.warning(
+                `Source files changed (${srcFiles.map(f => f.filename).join(', ')}) ` +
+                `but no test files were modified. Consider adding tests.`
+              );
+            }
