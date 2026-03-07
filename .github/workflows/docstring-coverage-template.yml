@@ -1,0 +1,63 @@
+name: Documentation Coverage
+
+on:
+  workflow_call:
+
+concurrency:
+  group: docstring-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: Docstring Coverage (interrogate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for Python source
+        id: check
+        run: |
+          if [ -d "src" ] && find src -name '*.py' | head -1 | grep -q .; then
+            echo "has_python=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_python=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.has_python == 'true'
+        with:
+          python-version: '3.12'
+
+      - name: Install interrogate
+        if: steps.check.outputs.has_python == 'true'
+        run: pip install interrogate
+
+      - name: Run docstring coverage
+        if: steps.check.outputs.has_python == 'true'
+        id: interrogate
+        run: |
+          echo '### 📝 Docstring Coverage Report' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          interrogate src/ -v --fail-under 0 --ignore-init-method --ignore-init-module 2>&1 | tee interrogate_output.txt || true
+
+          # Extract coverage percentage
+          COVERAGE=$(grep -oE '[0-9]+\.[0-9]+%' interrogate_output.txt | tail -1 || echo '0.0%')
+          echo "coverage=${COVERAGE}" >> $GITHUB_OUTPUT
+
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat interrogate_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+          # Warn if below 50%
+          NUMERIC=$(echo "$COVERAGE" | tr -d '%')
+          if [ "$(echo "$NUMERIC < 50" | bc -l 2>/dev/null || echo 1)" = "1" ]; then
+            echo "::warning::Docstring coverage is ${COVERAGE} (below 50% threshold)"
+          fi
+
+      - name: Upload report
+        if: steps.check.outputs.has_python == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: docstring-coverage
+          path: interrogate_output.txt
+          retention-days: 14

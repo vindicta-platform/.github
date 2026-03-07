@@ -1,0 +1,63 @@
+name: Auto README Badges
+
+on:
+  workflow_call:
+
+jobs:
+  badges:
+    name: Update README Badges
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate badges
+        id: badges
+        run: |
+          REPO="${{ github.repository }}"
+          OWNER="${{ github.repository_owner }}"
+          NAME="$(echo $REPO | cut -d'/' -f2)"
+
+          CI_BADGE="![CI](https://github.com/${REPO}/actions/workflows/ci.yml/badge.svg)"
+          LICENSE_BADGE="![License](https://img.shields.io/github/license/${REPO})"
+          VERSION_BADGE="![Version](https://img.shields.io/github/v/release/${REPO}?include_prereleases)"
+          ISSUES_BADGE="![Issues](https://img.shields.io/github/issues/${REPO})"
+          PRS_BADGE="![PRs](https://img.shields.io/github/issues-pr/${REPO})"
+
+          BADGE_LINE="${CI_BADGE} ${LICENSE_BADGE} ${VERSION_BADGE} ${ISSUES_BADGE} ${PRS_BADGE}"
+
+          if [ ! -f README.md ]; then
+            echo "::notice::No README.md found"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check if badges section exists
+          if grep -q '<!-- BADGES:START -->' README.md; then
+            # Update existing badges
+            sed -i '/<!-- BADGES:START -->/,/<!-- BADGES:END -->/{//!d}' README.md
+            sed -i "/<!-- BADGES:START -->/a ${BADGE_LINE}" README.md
+          else
+            # Insert badges after the first H1
+            FIRST_H1=$(grep -n '^# ' README.md | head -1 | cut -d: -f1)
+            if [ -n "$FIRST_H1" ]; then
+              NEXT=$((FIRST_H1 + 1))
+              sed -i "${NEXT}i\\\n<!-- BADGES:START -->\n${BADGE_LINE}\n<!-- BADGES:END -->" README.md
+            fi
+          fi
+
+          if git diff --quiet README.md; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit badge updates
+        if: steps.badges.outputs.changed == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git commit -m 'docs: update README badges [skip ci]'
+          git push
