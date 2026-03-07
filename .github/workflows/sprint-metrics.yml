@@ -1,0 +1,97 @@
+name: Sprint Metrics
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  metrics:
+    name: Collect Sprint Velocity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gather org-wide metrics
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const repos = await github.paginate(github.rest.repos.listForOrg, {
+              org: 'vindicta-platform', type: 'public'
+            });
+
+            const now = new Date();
+            const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+            let report = `# 📊 Sprint Metrics — Week of ${now.toISOString().slice(0, 10)}\n\n`;
+            report += `| Repo | Opened Issues | Closed Issues | Opened PRs | Merged PRs |\n`;
+            report += `|------|:---:|:---:|:---:|:---:|\n`;
+
+            let totals = { openedIssues: 0, closedIssues: 0, openedPRs: 0, mergedPRs: 0 };
+
+            for (const repo of repos) {
+              if (repo.archived) continue;
+              try {
+                const [openedIssues, closedIssues, openedPRs, mergedPRs] = await Promise.all([
+                  github.rest.search.issuesAndPullRequests({
+                    q: `repo:vindicta-platform/${repo.name} is:issue created:>=${weekAgo}`
+                  }),
+                  github.rest.search.issuesAndPullRequests({
+                    q: `repo:vindicta-platform/${repo.name} is:issue closed:>=${weekAgo}`
+                  }),
+                  github.rest.search.issuesAndPullRequests({
+                    q: `repo:vindicta-platform/${repo.name} is:pr created:>=${weekAgo}`
+                  }),
+                  github.rest.search.issuesAndPullRequests({
+                    q: `repo:vindicta-platform/${repo.name} is:pr merged:>=${weekAgo}`
+                  })
+                ]);
+
+                const oi = openedIssues.data.total_count;
+                const ci = closedIssues.data.total_count;
+                const op = openedPRs.data.total_count;
+                const mp = mergedPRs.data.total_count;
+                totals.openedIssues += oi;
+                totals.closedIssues += ci;
+                totals.openedPRs += op;
+                totals.mergedPRs += mp;
+
+                if (oi + ci + op + mp > 0) {
+                  report += `| ${repo.name} | ${oi} | ${ci} | ${op} | ${mp} |\n`;
+                }
+              } catch (e) {
+                core.info(`Skipping ${repo.name}: ${e.message}`);
+              }
+            }
+
+            report += `| **TOTAL** | **${totals.openedIssues}** | **${totals.closedIssues}** | **${totals.openedPRs}** | **${totals.mergedPRs}** |\n`;
+            report += `\n---\n\n`;
+
+            const velocity = totals.closedIssues + totals.mergedPRs;
+            const emoji = velocity >= 20 ? '🚀' : velocity >= 10 ? '⚡' : '🐢';
+            report += `**Velocity:** ${emoji} ${velocity} items resolved this week\n`;
+
+            // Create or update sprint metrics issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: 'vindicta-platform', repo: '.github',
+              labels: 'automated', state: 'open'
+            });
+            const existing = issues.find(i => i.title.includes('Sprint Metrics'));
+
+            if (existing) {
+              await github.rest.issues.update({
+                owner: 'vindicta-platform', repo: '.github',
+                issue_number: existing.number, body: report,
+                title: `📊 Sprint Metrics — ${now.toISOString().slice(0, 10)}`
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: 'vindicta-platform', repo: '.github',
+                title: `📊 Sprint Metrics — ${now.toISOString().slice(0, 10)}`,
+                body: report, labels: ['automated']
+              });
+            }
+
+            core.summary.addRaw(report);
+            await core.summary.write();
