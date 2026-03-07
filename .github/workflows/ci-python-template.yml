@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-python@v5
         if: steps.check-config.outputs.has_config == 'true'
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - uses: pre-commit/action@v3.0.1
         if: steps.check-config.outputs.has_config == 'true'
@@ -61,7 +61,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v5
         if: steps.check-python.outputs.has_python == 'true'
 
       - name: Cache uv dependencies
@@ -81,7 +81,9 @@ jobs:
 
       - name: Lint with ruff
         if: steps.check-python.outputs.has_python == 'true'
-        run: uv run ruff check src/ --output-format=github
+        run: |
+          uv run ruff check src/ --output-format=github
+          uv run ruff format --check src/
 
       - name: Type check with mypy
         if: steps.check-python.outputs.has_python == 'true'
@@ -100,7 +102,22 @@ jobs:
 
       - name: Run tests with coverage
         if: steps.check-python.outputs.has_python == 'true' && steps.check-tests.outputs.has_tests == 'true'
-        run: uv run pytest tests/ -v --tb=short --cov=src --cov-report=xml
+        run: uv run pytest tests/ -v --tb=short --cov=src --cov-report=xml --cov-fail-under=90
+
+      - name: Check for BDD features
+        if: steps.check-python.outputs.has_python == 'true'
+        id: check-bdd
+        run: |
+          if [ -d "features" ] && find features -name "*.feature" | head -1 | grep -q .; then
+            echo "has_bdd=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_bdd=false" >> $GITHUB_OUTPUT
+            echo "::notice::No BDD features found, skipping behave"
+          fi
+
+      - name: Run BDD tests with behave
+        if: steps.check-python.outputs.has_python == 'true' && steps.check-bdd.outputs.has_bdd == 'true'
+        run: uv run behave
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
