@@ -1,0 +1,68 @@
+name: Migration Safety Check
+
+on:
+  workflow_call:
+
+concurrency:
+  group: migration-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Validate Migrations
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect migration files
+        id: detect
+        run: |
+          MIGRATIONS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '(alembic|migrations?)/.*\.py$' || true)
+          if [ -z "$MIGRATIONS" ]; then
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "::notice::No migration files changed"
+          else
+            echo "found=true" >> $GITHUB_OUTPUT
+            echo "files<<EOF" >> $GITHUB_OUTPUT
+            echo "$MIGRATIONS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate migration safety
+        if: steps.detect.outputs.found == 'true'
+        run: |
+          echo '### \ud83d\uddc4\ufe0f Migration Safety Check' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+
+          ISSUES=0
+          while IFS= read -r file; do
+            echo "**\`$file\`:**" >> $GITHUB_STEP_SUMMARY
+
+            # Check for downgrade function
+            if grep -q 'def downgrade' "$file" 2>/dev/null; then
+              echo "- \u2705 Has \`downgrade()\` (reversible)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- \u274c Missing \`downgrade()\` (irreversible!)" >> $GITHUB_STEP_SUMMARY
+              ISSUES=$((ISSUES + 1))
+            fi
+
+            # Check for dangerous operations
+            if grep -qE 'drop_table|drop_column|drop_index' "$file" 2>/dev/null; then
+              echo "- \u26a0\ufe0f Contains destructive operations (DROP)" >> $GITHUB_STEP_SUMMARY
+              ISSUES=$((ISSUES + 1))
+            fi
+
+            # Check for data migrations
+            if grep -qE 'execute.*UPDATE|execute.*DELETE|execute.*INSERT' "$file" 2>/dev/null; then
+              echo "- \u26a0\ufe0f Contains data manipulation (review carefully)" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo '' >> $GITHUB_STEP_SUMMARY
+          done <<< "${{ steps.detect.outputs.files }}"
+
+          if [ "$ISSUES" -gt 0 ]; then
+            echo "::warning::${ISSUES} migration safety issue(s) detected"
+          fi
