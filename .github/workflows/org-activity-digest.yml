@@ -1,0 +1,106 @@
+name: Org Activity Digest
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  digest:
+    name: Weekly Activity Summary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate digest
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const repos = await github.paginate(github.rest.repos.listForOrg, {
+              org: 'vindicta-platform', type: 'public'
+            });
+
+            const now = new Date();
+            const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+            const since = weekAgo.toISOString();
+
+            let report = `# \ud83d\udcec Weekly Activity Digest\n\n`;
+            report += `**Period:** ${weekAgo.toISOString().slice(0, 10)} \u2014 ${now.toISOString().slice(0, 10)}\n\n`;
+
+            let totalCommits = 0, totalPRs = 0, totalReleases = 0;
+            let highlights = [];
+
+            for (const repo of repos) {
+              if (repo.archived) continue;
+              try {
+                // Recent commits
+                const { data: commits } = await github.rest.repos.listCommits({
+                  owner: 'vindicta-platform', repo: repo.name,
+                  since, per_page: 100
+                });
+
+                // Recent PRs merged
+                const { data: prs } = await github.rest.search.issuesAndPullRequests({
+                  q: `repo:vindicta-platform/${repo.name} is:pr merged:>=${since}`
+                });
+
+                // Recent releases
+                const { data: releases } = await github.rest.repos.listReleases({
+                  owner: 'vindicta-platform', repo: repo.name, per_page: 5
+                });
+                const recentReleases = releases.filter(r =>
+                  new Date(r.published_at) >= weekAgo
+                );
+
+                if (commits.length > 0 || prs.total_count > 0 || recentReleases.length > 0) {
+                  totalCommits += commits.length;
+                  totalPRs += prs.total_count;
+                  totalReleases += recentReleases.length;
+
+                  highlights.push({
+                    repo: repo.name,
+                    commits: commits.length,
+                    prs: prs.total_count,
+                    releases: recentReleases.length
+                  });
+                }
+              } catch { continue; }
+            }
+
+            report += '## Summary\n\n';
+            report += `- **${totalCommits}** commits\n`;
+            report += `- **${totalPRs}** PRs merged\n`;
+            report += `- **${totalReleases}** releases\n\n`;
+
+            if (highlights.length > 0) {
+              report += '## By Repository\n\n';
+              report += '| Repo | Commits | PRs | Releases |\n|------|:-------:|:---:|:--------:|\n';
+              highlights.sort((a, b) => b.commits - a.commits);
+              for (const h of highlights) {
+                report += `| ${h.repo} | ${h.commits} | ${h.prs} | ${h.releases} |\n`;
+              }
+            }
+
+            // Upsert issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: 'vindicta-platform', repo: '.github',
+              labels: 'automated', state: 'open'
+            });
+            const existing = issues.find(i => i.title.includes('Activity Digest'));
+            const title = `\ud83d\udcec Activity Digest \u2014 ${now.toISOString().slice(0, 10)}`;
+            if (existing) {
+              await github.rest.issues.update({
+                owner: 'vindicta-platform', repo: '.github',
+                issue_number: existing.number, body: report, title
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: 'vindicta-platform', repo: '.github',
+                title, body: report, labels: ['automated']
+              });
+            }
+
+            core.summary.addRaw(report);
+            await core.summary.write();
