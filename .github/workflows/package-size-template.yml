@@ -1,0 +1,68 @@
+name: Package Size Monitor
+
+on:
+  workflow_call:
+
+concurrency:
+  group: pkg-size-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    name: Track Package Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for pyproject.toml
+        id: check
+        run: |
+          if [ -f "pyproject.toml" ]; then
+            echo "buildable=true" >> $GITHUB_OUTPUT
+          else
+            echo "buildable=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.buildable == 'true'
+        with:
+          python-version: '3.12'
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.check.outputs.buildable == 'true'
+
+      - name: Build and measure
+        if: steps.check.outputs.buildable == 'true'
+        id: size
+        run: |
+          uv build 2>/dev/null || true
+
+          echo '### \ud83d\udce6 Package Size Report' >> $GITHUB_STEP_SUMMARY
+
+          if [ -d "dist" ]; then
+            echo '' >> $GITHUB_STEP_SUMMARY
+            echo '| Artifact | Size |' >> $GITHUB_STEP_SUMMARY
+            echo '|----------|:----:|' >> $GITHUB_STEP_SUMMARY
+
+            TOTAL=0
+            for f in dist/*; do
+              SIZE=$(stat -f%z "$f" 2>/dev/null || stat -c%s "$f" 2>/dev/null || echo 0)
+              SIZE_KB=$((SIZE / 1024))
+              TOTAL=$((TOTAL + SIZE))
+              echo "| \`$(basename $f)\` | ${SIZE_KB} KB |" >> $GITHUB_STEP_SUMMARY
+            done
+
+            TOTAL_KB=$((TOTAL / 1024))
+            echo "total_kb=${TOTAL_KB}" >> $GITHUB_OUTPUT
+
+            if [ "$TOTAL_KB" -gt 5120 ]; then
+              echo '' >> $GITHUB_STEP_SUMMARY
+              echo '\u26a0\ufe0f **Package exceeds 5 MB threshold**' >> $GITHUB_STEP_SUMMARY
+              echo "::warning::Package size ${TOTAL_KB} KB exceeds 5 MB threshold"
+            else
+              echo '' >> $GITHUB_STEP_SUMMARY
+              echo '\u2705 Package size within limits' >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo '\u26a0\ufe0f Build produced no dist/ artifacts' >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,72 @@
+name: Test Impact Analyzer
+
+on:
+  workflow_call:
+
+concurrency:
+  group: test-impact-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Identify Impacted Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for Python source
+        id: check
+        run: |
+          if [ -d "src" ] && [ -d "tests" ]; then
+            echo "runnable=true" >> $GITHUB_OUTPUT
+          else
+            echo "runnable=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.runnable == 'true'
+        with:
+          python-version: '3.12'
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.check.outputs.runnable == 'true'
+
+      - name: Install and generate coverage map
+        if: steps.check.outputs.runnable == 'true'
+        run: |
+          uv sync --all-extras 2>/dev/null || uv sync 2>/dev/null || true
+          uv run pytest tests/ --co -q 2>/dev/null | head -50 > all_tests.txt || true
+
+      - name: Map changed files to tests
+        if: steps.check.outputs.runnable == 'true'
+        id: impact
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^src/.*\.py$' || true)
+          if [ -z "$CHANGED" ]; then
+            echo "::notice::No src/ Python files changed"
+            echo "impacted=none" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo '### \ud83c\udfaf Test Impact Analysis' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '| Changed Source | Likely Tests |' >> $GITHUB_STEP_SUMMARY
+          echo '|---------------|-------------|' >> $GITHUB_STEP_SUMMARY
+
+          IMPACTED=""
+          while IFS= read -r src_file; do
+            MODULE=$(echo "$src_file" | sed 's|src/||; s|/|.|g; s|\.py$||')
+            BASE=$(basename "$src_file" .py)
+            TESTS=$(grep -l "$BASE\|$MODULE" tests/**/*.py 2>/dev/null | head -5 | paste -sd ', ' -)
+            [ -z "$TESTS" ] && TESTS="_(no direct match)_"
+            echo "| \`$src_file\` | $TESTS |" >> $GITHUB_STEP_SUMMARY
+            IMPACTED="$IMPACTED $TESTS"
+          done <<< "$CHANGED"
+
+          echo "impacted=$(echo $IMPACTED | tr ' ' ',')" >> $GITHUB_OUTPUT

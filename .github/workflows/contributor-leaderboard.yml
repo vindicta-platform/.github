@@ -1,0 +1,90 @@
+name: Contributor Leaderboard
+
+on:
+  schedule:
+    - cron: '0 10 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  leaderboard:
+    name: Generate Contributions Report
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build leaderboard
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const repos = await github.paginate(github.rest.repos.listForOrg, {
+              org: 'vindicta-platform', type: 'public'
+            });
+
+            const now = new Date();
+            const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+            const since = monthAgo.toISOString();
+
+            const contributors = {};
+
+            for (const repo of repos) {
+              if (repo.archived) continue;
+              try {
+                const { data: commits } = await github.rest.repos.listCommits({
+                  owner: 'vindicta-platform', repo: repo.name,
+                  since, per_page: 100
+                });
+
+                for (const commit of commits) {
+                  const author = commit.author?.login || commit.commit.author?.name || 'unknown';
+                  if (author.includes('[bot]')) continue;
+                  if (!contributors[author]) {
+                    contributors[author] = { commits: 0, repos: new Set() };
+                  }
+                  contributors[author].commits++;
+                  contributors[author].repos.add(repo.name);
+                }
+              } catch { continue; }
+            }
+
+            let report = `# \ud83c\udfc6 Contributor Leaderboard \u2014 ${now.toISOString().slice(0, 7)}\n\n`;
+            report += `**Period:** ${monthAgo.toISOString().slice(0, 10)} \u2014 ${now.toISOString().slice(0, 10)}\n\n`;
+
+            const sorted = Object.entries(contributors)
+              .sort((a, b) => b[1].commits - a[1].commits);
+
+            if (sorted.length === 0) {
+              report += 'No contributions this period.\n';
+            } else {
+              report += '| Rank | Contributor | Commits | Repos |\n';
+              report += '|:----:|-------------|:-------:|:-----:|\n';
+
+              const medals = ['\ud83e\udd47', '\ud83e\udd48', '\ud83e\udd49'];
+              sorted.slice(0, 20).forEach(([author, data], i) => {
+                const medal = medals[i] || `${i + 1}`;
+                report += `| ${medal} | @${author} | ${data.commits} | ${data.repos.size} |\n`;
+              });
+            }
+
+            // Upsert issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: 'vindicta-platform', repo: '.github',
+              labels: 'automated', state: 'open'
+            });
+            const existing = issues.find(i => i.title.includes('Contributor Leaderboard'));
+            const title = `\ud83c\udfc6 Contributor Leaderboard \u2014 ${now.toISOString().slice(0, 7)}`;
+            if (existing) {
+              await github.rest.issues.update({
+                owner: 'vindicta-platform', repo: '.github',
+                issue_number: existing.number, body: report, title
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: 'vindicta-platform', repo: '.github',
+                title, body: report, labels: ['automated']
+              });
+            }
+
+            core.summary.addRaw(report);
+            await core.summary.write();
