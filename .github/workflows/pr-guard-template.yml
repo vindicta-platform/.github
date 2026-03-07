@@ -42,16 +42,26 @@ jobs:
             });
             const totalChanges = files.reduce((sum, f) => sum + f.changes, 0);
             if (totalChanges > 500) {
-              core.warning(
-                `⚠️ Large PR detected: ${totalChanges} lines changed across ${files.length} files. ` +
-                `Consider breaking this into smaller, focused PRs.`
-              );
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: `⚠️ **Large PR Warning**: ${totalChanges} lines changed across ${files.length} files.\n\nConsider breaking this into smaller, focused PRs for easier review.`
+              const body = `⚠️ **Large PR Warning**: ${totalChanges} lines changed across ${files.length} files.\n\nConsider breaking this into smaller, focused PRs for easier review.`;
+
+              // Deduplicate: find and update existing bot comment
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number
               });
+              const existing = comments.find(c => c.body.includes('Large PR Warning') && c.user.login === 'github-actions[bot]');
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  comment_id: existing.id, body
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: context.issue.number, body
+                });
+              }
+              core.warning(`Large PR: ${totalChanges} lines changed across ${files.length} files`);
             } else {
               core.notice(`PR size OK: ${totalChanges} lines changed across ${files.length} files`);
             }
