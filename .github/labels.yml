@@ -1,0 +1,84 @@
+# Canonical label definitions — synced to all org repos
+# Edit this file and push to main to propagate changes
+
+# Priority
+- name: priority:critical
+  color: "B60205"
+  description: "Blocks release or causes data loss"
+- name: priority:high
+  color: "D93F0B"
+  description: "Must be addressed this sprint"
+- name: priority:medium
+  color: "FBCA04"
+  description: "Should be addressed soon"
+- name: priority:low
+  color: "0E8A16"
+  description: "Nice to have"
+
+# Type
+- name: bug
+  color: "D73A4A"
+  description: "Something isn't working"
+- name: feature
+  color: "A2EEEF"
+  description: "New feature or request"
+- name: enhancement
+  color: "A2EEEF"
+  description: "Improvement to existing functionality"
+- name: documentation
+  color: "0075CA"
+  description: "Improvements or additions to documentation"
+- name: chore
+  color: "D4C5F9"
+  description: "Maintenance task"
+- name: refactor
+  color: "C5DEF5"
+  description: "Code restructuring without behavior change"
+
+# Status
+- name: blocked
+  color: "B60205"
+  description: "Waiting on external dependency or decision"
+- name: stale
+  color: "EDEDED"
+  description: "Inactive for extended period"
+- name: pinned
+  color: "006B75"
+  description: "Should not be auto-closed"
+- name: epic
+  color: "3E4B9E"
+  description: "Large multi-issue initiative"
+- name: do-not-close
+  color: "006B75"
+  description: "Exempt from stale bot"
+
+# Workflow
+- name: automated
+  color: "BFDADC"
+  description: "Created by automation"
+- name: speckit
+  color: "7057FF"
+  description: "Spec-driven development artifact"
+- name: integration
+  color: "F9D0C4"
+  description: "Cross-package integration concern"
+- name: health-report
+  color: "C2E0C6"
+  description: "Org health scorecard report"
+
+# Size
+- name: "size/XS"
+  color: "3CBF00"
+  description: "< 10 lines changed"
+- name: "size/S"
+  color: "5D9801"
+  description: "10-50 lines changed"
+- name: "size/M"
+  color: "7F7203"
+  description: "50-200 lines changed"
+- name: "size/L"
+  color: "A14C05"
+  description: "200-500 lines changed"
+- name: "size/XL"
+  color: "C32607"
+  description: "500+ lines changed"

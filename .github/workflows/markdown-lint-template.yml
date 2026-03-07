@@ -1,0 +1,51 @@
+name: Markdown Lint
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for markdown files
+        id: check
+        run: |
+          if find . -name '*.md' -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' | head -1 | grep -q .; then
+            echo "has_markdown=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_markdown=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Lint markdown files
+        if: steps.check.outputs.has_markdown == 'true'
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: |
+            **/*.md
+            !node_modules
+            !.venv
+            !.git
+            !**/repomix*.md
+        continue-on-error: true
+
+      - name: Check for broken internal links
+        if: steps.check.outputs.has_markdown == 'true'
+        run: |
+          echo '### 🔗 Internal Link Check' >> $GITHUB_STEP_SUMMARY
+          BROKEN=0
+          find . -name '*.md' -not -path './.git/*' -not -path './.venv/*' -not -path './node_modules/*' | while read file; do
+            grep -oP '\[.*?\]\((?!http)(?!#)(.*?)\)' "$file" 2>/dev/null | grep -oP '\((.*?)\)' | tr -d '()' | while read link; do
+              CLEAN=$(echo "$link" | cut -d'#' -f1 | cut -d'?' -f1)
+              if [ -n "$CLEAN" ] && [ ! -e "$(dirname $file)/$CLEAN" ] && [ ! -e "$CLEAN" ]; then
+                echo "- ❌ \'$file\': broken link → \'$CLEAN\'" >> $GITHUB_STEP_SUMMARY
+                BROKEN=$((BROKEN + 1))
+              fi
+            done
+          done
+          if [ "$BROKEN" -eq 0 ]; then
+            echo '✅ All internal links valid' >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
