@@ -1,0 +1,126 @@
+name: Org Health Scorecard
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  scorecard:
+    name: Generate Health Report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate scorecard
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const repos = await github.paginate(github.rest.repos.listForOrg, {
+              org: 'vindicta-platform',
+              type: 'public'
+            });
+
+            const requiredFiles = ['LICENSE', 'SECURITY.md', 'CODE_OF_CONDUCT.md', 'CODEOWNERS'];
+            const now = new Date();
+            let report = `# 🩺 Org Health Scorecard\n\n`;
+            report += `**Generated:** ${now.toISOString().slice(0, 10)}\n\n`;
+            report += `| Repo | ${requiredFiles.join(' | ')} | CI | Open Issues | Last Push |\n`;
+            report += `|---${requiredFiles.map(() => '|---').join('')}|---|---|---|\n`;
+
+            let totalScore = 0;
+            let maxScore = 0;
+
+            for (const repo of repos) {
+              if (repo.archived) continue;
+
+              const checks = {};
+              let repoScore = 0;
+              let repoMax = 0;
+
+              // Check required files
+              for (const file of requiredFiles) {
+                repoMax += 1;
+                try {
+                  await github.rest.repos.getContent({
+                    owner: 'vindicta-platform',
+                    repo: repo.name,
+                    path: file
+                  });
+                  checks[file] = '✅';
+                  repoScore += 1;
+                } catch {
+                  checks[file] = '❌';
+                }
+              }
+
+              // Check for CI workflow
+              repoMax += 1;
+              try {
+                await github.rest.repos.getContent({
+                  owner: 'vindicta-platform',
+                  repo: repo.name,
+                  path: '.github/workflows'
+                });
+                checks.ci = '✅';
+                repoScore += 1;
+              } catch {
+                checks.ci = '❌';
+              }
+
+              // Last push staleness
+              const lastPush = new Date(repo.pushed_at);
+              const daysSince = Math.floor((now - lastPush) / (1000 * 60 * 60 * 24));
+              const staleEmoji = daysSince > 90 ? '🔴' : daysSince > 30 ? '🟡' : '🟢';
+
+              totalScore += repoScore;
+              maxScore += repoMax;
+
+              const fileChecks = requiredFiles.map(f => checks[f]).join(' | ');
+              report += `| [${repo.name}](${repo.html_url}) | ${fileChecks} | ${checks.ci} | ${repo.open_issues_count} | ${staleEmoji} ${daysSince}d |\n`;
+            }
+
+            const pct = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+            const grade = pct >= 90 ? '🟢 A' : pct >= 70 ? '🟡 B' : pct >= 50 ? '🟠 C' : '🔴 D';
+
+            report += `\n---\n\n`;
+            report += `**Overall Health:** ${grade} (${pct}% — ${totalScore}/${maxScore} checks passing)\n\n`;
+            report += `### Legend\n`;
+            report += `- ✅ Present | ❌ Missing\n`;
+            report += `- 🟢 Active (<30d) | 🟡 Aging (30-90d) | 🔴 Stale (>90d)\n`;
+
+            // Find or update existing health report issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: 'vindicta-platform',
+              repo: '.github',
+              labels: 'health-report',
+              state: 'open',
+              per_page: 1
+            });
+
+            if (issues.length > 0) {
+              await github.rest.issues.update({
+                owner: 'vindicta-platform',
+                repo: '.github',
+                issue_number: issues[0].number,
+                body: report,
+                title: `🩺 Org Health Report — ${now.toISOString().slice(0, 10)}`
+              });
+              core.notice(`Updated health report issue #${issues[0].number}`);
+            } else {
+              const { data: issue } = await github.rest.issues.create({
+                owner: 'vindicta-platform',
+                repo: '.github',
+                title: `🩺 Org Health Report — ${now.toISOString().slice(0, 10)}`,
+                body: report,
+                labels: ['health-report']
+              });
+              core.notice(`Created health report issue #${issue.number}`);
+            }
+
+            core.summary.addRaw(report);
+            await core.summary.write();
