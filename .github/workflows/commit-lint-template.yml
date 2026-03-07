@@ -1,0 +1,46 @@
+name: Commit Lint
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR commits
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: commits } = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100
+            });
+            
+            const pattern = /^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(\(.+\))?!?:\s.+/;
+            const violations = [];
+            
+            for (const { sha, commit } of commits) {
+              const msg = commit.message.split('\n')[0];
+              if (msg.startsWith('Merge ') || msg.startsWith('Revert ')) continue;
+              if (msg.includes('[skip ci]') || msg.includes('[bot]')) continue;
+              if (!pattern.test(msg)) {
+                violations.push(`- \`${sha.slice(0, 7)}\`: ${msg}`);
+              }
+            }
+            
+            if (violations.length > 0) {
+              const body = `## ⚠️ Commit Message Lint\n\nThe following commits do not follow [Conventional Commits](https://www.conventionalcommits.org/):\n\n${violations.join('\n')}\n\n**Expected format:** \`type(scope): description\`\n\nTypes: \`feat\`, \`fix\`, \`docs\`, \`style\`, \`refactor\`, \`perf\`, \`test\`, \`chore\`, \`ci\`, \`build\`, \`revert\``;
+              core.warning(`${violations.length} commit(s) violate conventional commit format`);
+              core.summary.addRaw(body);
+              await core.summary.write();
+            } else {
+              core.notice('All commits follow conventional commit format ✅');
+            }
