@@ -1,0 +1,51 @@
+name: Deprecation Tracker
+
+on:
+  workflow_call:
+
+concurrency:
+  group: deprecation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: Scan for Deprecations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for Python source
+        id: check
+        run: |
+          if [ -d "src" ] && find src -name '*.py' | head -1 | grep -q .; then
+            echo "has_python=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_python=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Scan for deprecation markers
+        if: steps.check.outputs.has_python == 'true'
+        id: scan
+        run: |
+          echo '### ⚠️ Deprecation Tracker' >> $GITHUB_STEP_SUMMARY
+          TOTAL=0
+
+          DEPRECATED=$(grep -rn '@deprecated\|DeprecationWarning\|warnings.warn.*deprecat\|# DEPRECATED\|# TODO.*deprecat' src/ 2>/dev/null || true)
+          if [ -n "$DEPRECATED" ]; then
+            COUNT=$(echo "$DEPRECATED" | wc -l)
+            TOTAL=$((TOTAL + COUNT))
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Found ${COUNT} deprecation marker(s):**" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$DEPRECATED" | head -30 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$TOTAL" -eq 0 ]; then
+            echo '✅ No deprecation markers found' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Total: ${TOTAL} deprecation(s) to track**" >> $GITHUB_STEP_SUMMARY
+            echo "::warning::${TOTAL} deprecation markers found in codebase"
+          fi
+          echo "count=${TOTAL}" >> $GITHUB_OUTPUT
