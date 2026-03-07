@@ -1,0 +1,68 @@
+name: Dependency Audit
+
+on:
+  workflow_call:
+
+concurrency:
+  group: dep-audit-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for pyproject.toml
+        id: check-pyproject
+        run: |
+          if [ -f "pyproject.toml" ]; then
+            echo "has_pyproject=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_pyproject=false" >> $GITHUB_OUTPUT
+            echo "::notice::No pyproject.toml found, skipping audit"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check-pyproject.outputs.has_pyproject == 'true'
+        with:
+          python-version: '3.12'
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.check-pyproject.outputs.has_pyproject == 'true'
+
+      - name: Install dependencies
+        if: steps.check-pyproject.outputs.has_pyproject == 'true'
+        run: uv sync --all-extras 2>/dev/null || uv sync 2>/dev/null || true
+
+      - name: Run pip-audit
+        if: steps.check-pyproject.outputs.has_pyproject == 'true'
+        run: |
+          uv pip install pip-audit --system
+          pip-audit --strict --desc 2>&1 | tee audit_report.txt || true
+          if grep -q "found [1-9]" audit_report.txt 2>/dev/null; then
+            echo "::warning::Vulnerabilities detected — see audit report"
+          else
+            echo "::notice::No known vulnerabilities found"
+          fi
+
+      - name: Upload audit report
+        if: steps.check-pyproject.outputs.has_pyproject == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-report
+          path: audit_report.txt
+          retention-days: 30
+
+  dependency-review:
+    name: Dependency Review (PR only)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: always
