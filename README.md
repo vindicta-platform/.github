@@ -1,6 +1,6 @@
 # vindicta-platform/.github
 
-> **Status:** maintained as the org's profile and template store; the platform itself is a design record (see the [organization page](profile/README.md)). The six-week schedules in `ROADMAP.md` and `PROJECT_SCHEDULE.md` are historical documents from early 2026.
+> **Status:** maintained as the org's profile and template store; the platform itself is in active development, starting with the dice core (see the [organization page](profile/README.md)). The six-week schedules in `ROADMAP.md` and `PROJECT_SCHEDULE.md` are historical documents from early 2026.
 
 Organization-level configuration for the Vindicta Platform: the profile page, contributing guide, issue and pull-request templates, and a library of reusable GitHub Actions workflow templates under [`.github/workflows/`](.github/workflows/) and [`workflows/`](workflows/).
 

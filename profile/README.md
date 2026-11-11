@@ -1,8 +1,8 @@
 # Vindicta Platform
 
-> **Status:** design record, 2025–2026. A personal project by [Brandon Fox](https://github.com/brandon-fox). The core domains were specified and partly implemented; the platform was never launched and development stopped in March 2026. The repositories are kept public as a worked example of deterministic, auditable game mechanics designed before code.
+> **Status:** active, pre-1.0. A personal project by [Brandon Fox](https://github.com/brandon-fox). The core domains were specified and partly implemented in 2025–2026. No code changed between March and November 2026, when work resumed with the dice core (spec 002), built first under [Axiom-Driven Engineering](https://github.com/First-ADE). The repositories are public as a worked example of deterministic, auditable game mechanics designed before code.
 
-Vindicta was an attempt at provably fair competitive tabletop wargaming: dice you can audit, a ledger that cannot be silently edited, a notation for recording battles, and models that predict outcomes from that notation. What survives is the design: 47 numbered specifications, the domain split below, and the parts of the engine, ledger and notation that were built.
+Vindicta is a platform for provably fair competitive tabletop wargaming: dice you can audit, a ledger that cannot be silently edited, a notation for recording battles, and models that predict outcomes from that notation. What survives is the design: 47 numbered specifications, the domain split below, and the parts of the engine, ledger and notation that were built.
 
 ## Architecture
 
@@ -40,7 +40,7 @@ The correctness ideas (a seeded, buffered entropy source whose draws can be repl
 
 ## Contributing
 
-This is a design record rather than an active project, so issues and pull requests are welcome but reviewed slowly. If you want to build on the dice or ledger designs, fork freely; they are MIT licensed. Sign commits with the Developer Certificate of Origin (`git commit -s`); see [`CONTRIBUTING.md`](https://github.com/vindicta-platform/.github/blob/main/CONTRIBUTING.md).
+This is a single-maintainer project, so issues and pull requests are welcome but reviewed slowly. If you want to build on the dice or ledger designs, fork freely; they are MIT licensed. Sign commits with the Developer Certificate of Origin (`git commit -s`); see [`CONTRIBUTING.md`](https://github.com/vindicta-platform/.github/blob/main/CONTRIBUTING.md).
 
 ---
 
