@@ -6,4 +6,4 @@ Sign off every commit (`git commit -s`). That certifies you wrote the change or 
 
 ## Status of this project
 
-Vindicta is a design record rather than an active product (see the [organization page](profile/README.md)). Pull requests are welcome and reviewed slowly.
+Vindicta is an active, pre-1.0 project with a single maintainer (see the [organization page](profile/README.md)). Pull requests are welcome and reviewed slowly.
