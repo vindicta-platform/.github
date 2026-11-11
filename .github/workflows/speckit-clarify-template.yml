@@ -85,7 +85,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_FILES: ${{ steps.check-specs.outputs.spec_files }}
         run: |
-          python -c "
+          uv run --no-project --with ollama python -c "
           import ollama, json, os
 
           spec_files = os.environ.get('SPEC_FILES', '').split(',')

@@ -41,7 +41,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12']
+        # Every package that uses this template requires Python 3.12 or later.
+        python-version: ['3.12']
 
     steps:
       - uses: actions/checkout@v4
@@ -78,7 +79,8 @@ jobs:
       - name: Install dependencies
         if: steps.check-python.outputs.has_python == 'true'
         run: |
-          uv sync --all-extras 2>/dev/null || uv sync 2>/dev/null || echo "::warning::uv sync failed, attempting pip install"
+          # Fail here if dependencies cannot be installed; do not let a later step fail in its place.
+          uv sync --all-extras
 
       - name: Lint with ruff
         if: steps.check-python.outputs.has_python == 'true'
