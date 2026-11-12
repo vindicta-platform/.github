@@ -11,8 +11,9 @@ jobs:
   pre-commit:
     name: Pre-Commit Checks
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Check for pre-commit config
         id: check-config
@@ -24,12 +25,12 @@ jobs:
             echo "::notice::No .pre-commit-config.yaml found, skipping pre-commit checks"
           fi
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         if: steps.check-config.outputs.has_config == 'true'
         with:
           python-version: '3.11'
 
-      - uses: pre-commit/action@v3.0.1
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
         if: steps.check-config.outputs.has_config == 'true'
         with:
           extra_args: --all-files --show-diff-on-failure
@@ -37,12 +38,13 @@ jobs:
   test:
     name: Node.js Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [pre-commit]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -74,7 +76,7 @@ jobs:
         if: hashFiles('playwright.config.*') == ''
 
       - name: Upload test artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.0
         if: failure()
         with:
           name: test-artifacts
@@ -85,6 +87,7 @@ jobs:
   convert-to-draft:
     name: Convert to Draft on Failure
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [pre-commit, test]
     if: failure() && github.event_name == 'pull_request'
     continue-on-error: true
@@ -92,7 +95,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Convert PR to Draft
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
         with:
           script: |
             const mutation = `mutation($id: ID!) {

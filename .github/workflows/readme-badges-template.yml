@@ -3,14 +3,20 @@ name: Auto README Badges
 on:
   workflow_call:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   badges:
     name: Update README Badges
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: write
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Generate badges
         id: badges
@@ -53,11 +59,14 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit badge updates
+      - name: Open PR with badge updates
         if: steps.badges.outputs.changed == 'true'
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add README.md
-          git commit -m 'docs: update README badges [skip ci]'
-          git push
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: README.md
+          branch: chore/readme-badges
+          delete-branch: true
+          commit-message: 'docs: update README badges'
+          title: 'docs: update README badges'
+          body: 'Automated update of README badges.'
