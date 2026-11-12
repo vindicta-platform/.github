@@ -1,36 +1,16 @@
-# .github
+# vindicta-platform/.github
 
-Organization-wide GitHub configuration, templates, and roadmap for the **Vindicta Platform**.
+> **Status:** maintained as the org's profile and template store; the platform itself is in active development, starting with the dice core (see the [organization page](profile/README.md)). The six-week schedules in `ROADMAP.md` and `PROJECT_SCHEDULE.md` are historical documents from early 2026.
 
-## 📋 Contents
+Organization-level configuration for the Vindicta Platform: the profile page, contributing guide, issue and pull-request templates, and a library of reusable GitHub Actions workflow templates under [`.github/workflows/`](.github/workflows/) and [`workflows/`](workflows/).
 
-- [ROADMAP.md](./ROADMAP.md) — Master 6-week release schedule
-- [PROJECT_SCHEDULE.md](./PROJECT_SCHEDULE.md) — Daily task allocations
+## Contents
 
-## 🔗 Quick Links
+- [`profile/README.md`](profile/README.md): what Vindicta was, its architecture, and where to read the design.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): how to contribute, including Developer Certificate of Origin sign-off.
+- [`ROADMAP.md`](ROADMAP.md), [`PROJECT_SCHEDULE.md`](PROJECT_SCHEDULE.md): the February–March 2026 plan, kept for the record.
+- [`.github/workflows/`](.github/workflows/): reusable workflow templates (CI for Python and Node, release drafting, dependency audit, markdown lint, and others).
 
-- **Organization**: https://github.com/vindicta-platform/
-- **PR Dashboard**: https://github.com/orgs/vindicta-platform/projects/3
-- **Documentation**: https://vindicta-platform.github.io/Platform-Docs/
+## Independence
 
-## 📊 Release Status
-
-| Product | Current | Target | ETA |
-|---------|---------|--------|-----|
-| Vindicta-Portal | v0.1.0 | v1.0.0 | Mar 15, 2026 |
-| Vindicta-API | v0.1.0 | v1.0.0 | Mar 14, 2026 |
-| Vindicta-Core | v0.1.0 | v1.0.0 | Mar 13, 2026 |
-
-## Platform Documentation
-
-> **📌 Important:** All cross-cutting decisions, feature proposals, and platform-wide architecture documentation live in [**Platform-Docs**](https://github.com/vindicta-platform/Platform-Docs).
->
-> Any decision affecting multiple repos **must** be recorded there before implementation.
-
-- 📋 [Feature Proposals](https://github.com/vindicta-platform/Platform-Docs/tree/main/docs/proposals)
-- 🏗️ [Architecture Decisions](https://github.com/vindicta-platform/Platform-Docs/tree/main/docs)
-- 📖 [Contributing Guide](https://github.com/vindicta-platform/Platform-Docs/blob/main/CONTRIBUTING.md)
-
----
-
-*Maintained by the Vindicta Platform Product Owner*
+This is a personal project by Brandon Fox, built on my own time and equipment. It is not affiliated with, endorsed by, or derived from the work of any employer, current or former, and does not represent their views, products or practices. Licensed under the MIT License; principles at [First-ADE/PRINCIPLES.md](https://github.com/First-ADE/.github/blob/main/PRINCIPLES.md).
