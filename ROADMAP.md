@@ -1,3 +1,5 @@
+> **Historical document.** Written in early 2026 for a six-week push; the platform was not launched and work stopped in March 2026. Kept for the record.
+
 # Vindicta Platform — Master Roadmap
 
 > **Last Updated**: 2026-02-10

@@ -1,34 +1,22 @@
-<div align="center">
+# Vindicta Platform
 
-# ⚔️ Vindicta Platform
+> **Status:** active, pre-1.0. A personal project by [Brandon Fox](https://github.com/brandon-fox). The core domains were specified and partly implemented in 2025–2026. No code changed between March and November 2026, when work resumed with the dice core (spec 002), built first under [Axiom-Driven Engineering](https://github.com/First-ADE). The repositories are public as a worked example of deterministic, auditable game mechanics designed before code.
 
-*Provably fair competitive gaming, powered by cryptographically auditable mechanics and AI-driven strategic insights.*
+Vindicta is a platform for provably fair competitive tabletop wargaming: dice you can audit, a ledger that cannot be silently edited, a notation for recording battles, and models that predict outcomes from that notation. What survives is the design: 47 numbered specifications, the domain split below, and the parts of the engine, ledger and notation that were built.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Launch%20Portal-FF0000?style=for-the-badge&logo=firebase)](https://vindicta-warhammer.web.app)
-<br/>
-[![Documentation](https://img.shields.io/badge/docs-Foundation-7000ff?style=flat-square)](https://vindicta-platform.github.io/vindicta-foundation/)
-[![Roadmap](https://img.shields.io/badge/roadmap-v1.0.0%20Mar%202026-FFD700?style=flat-square)](https://github.com/vindicta-platform/.github/blob/main/ROADMAP.md)
-[![PR Dashboard](https://img.shields.io/badge/PRs-Dashboard-00ff88?style=flat-square)](https://github.com/orgs/vindicta-platform/projects/3)
-
-</div>
-
----
-
-## 🗺️ System Architecture
-
-The Vindicta Platform consolidates 7 domain contexts into a unified e-sports ecosystem.
+## Architecture
 
 ```mermaid
 C4Container
-    title Container diagram for Vindicta Platform
-    
-    Container(platform, "Platform & Portal", "Vindicta-Portal / API", "User Interface, API Gateway, and Identity.")
-    Container(foundation, "Foundation", "vindicta-foundation", "Shared Kernel: Base Models & Architecture.")
-    Container(engine, "Engine", "vindicta-engine", "Physics, Dice, and AI Core.")
-    Container(scribe, "Scribe", "warscribe-system", "Notation Parsing & Vision.")
-    Container(economy, "Economy", "vindicta-economy", "Ledger, Quotas & Billing.")
-    Container(oracle, "Oracle", "vindicta-oracle", "Predictive Models & Meta Analysis.")
-    Container(agents, "Agents", "vindicta-agents", "Swarm Orchestration & SDKs.")
+    title Container diagram for Vindicta Platform (as designed)
+
+    Container(platform, "Platform & Portal", "Vindicta-Portal / API", "User interface, API gateway, identity.")
+    Container(foundation, "Foundation", "vindicta-foundation", "Shared kernel: base models and architecture.")
+    Container(engine, "Engine", "vindicta-engine", "Physics, dice, entropy, AI core.")
+    Container(scribe, "Scribe", "warscribe-system", "Notation parsing and vision.")
+    Container(economy, "Economy", "vindicta-economy", "Ledger, quotas, billing.")
+    Container(oracle, "Oracle", "vindicta-oracle", "Predictive models and meta analysis.")
+    Container(agents, "Agents", "vindicta-agents", "Swarm orchestration and SDKs.")
 
     Rel(platform, foundation, "Inherits")
     Rel(platform, engine, "Simulates")
@@ -38,69 +26,22 @@ C4Container
     Rel(agents, platform, "Automates")
 ```
 
----
+## Where to read
 
-## ⚡ Quick Start
+| Repository | What it holds | State (by last push) |
+| --- | --- | --- |
+| [`specs`](https://github.com/vindicta-platform/specs) | The specification registry: 47 features, BDD-first, each with `spec.md`, `plan.md` and `tasks.md`. Specs 002–008 (dice core, dice evaluator, dice parser, rules validation, battle transcript engine, entropy buffer) are the ones that matter for the correctness argument. | March 2026, complete as a design |
+| [`vindicta-foundation`](https://github.com/vindicta-platform/vindicta-foundation) | Base models, shared kernel, constitutional documentation. | November 2026, maintained as reference |
+| [`vindicta-engine`](https://github.com/vindicta-platform/vindicta-engine) | Dice rolling, physics and the AI core; the entropy buffer and evaluator live here. | March 2026, partial implementation |
+| `.github` (this repository) | Org profile, contributing guide, CI templates. | Maintained |
+| Everything else under this org | Economy, oracle, agents, notation system, portal, orchestrator. | Archived in November 2026; readable, not maintained |
 
-Get up and running with our **"Hello World"** examples in the [Orchestrator Repository](https://github.com/vindicta-platform/vindicta-platform/tree/main/examples).
+The correctness ideas (a seeded, buffered entropy source whose draws can be replayed; an append-only ledger with hash chaining; a notation that makes a battle reproducible) are written up as a case study on [brandonfox.dev](https://brandonfox.dev) once that page is live.
 
-```bash
-# Clone the orchestrator
-git clone --recurse-submodules https://github.com/vindicta-platform/vindicta-platform.git
-cd vindicta-platform
+## Contributing
 
-# Run the Dice Engine example
-uv run examples/dice_roll.py
-
-# Run the WARScribe Action example
-uv run examples/warscribe_actions.py
-```
+This is a single-maintainer project, so issues and pull requests are welcome but reviewed slowly. If you want to build on the dice or ledger designs, fork freely; they are MIT licensed. Sign commits with the Developer Certificate of Origin (`git commit -s`); see [`CONTRIBUTING.md`](https://github.com/vindicta-platform/.github/blob/main/CONTRIBUTING.md).
 
 ---
 
-## ⚔️ Choose Your Class
-
-Join the development squad that matches your skills and interests.
-
-| Class                | Skills                    | Quest                                          | Realm                                                                       |
-| :------------------- | :------------------------ | :--------------------------------------------- | :-------------------------------------------------------------------------- |
-| **Tech-Priest**      | Python, Math, Probability | Build the physics engine and entropy proofs.   | [vindicta-engine](https://github.com/vindicta-platform/vindicta-engine)     |
-| **Logos Historian**  | NLP, Vision, Parsing      | Decode WARScribe notation and parse rosters.   | [warscribe-system](https://github.com/vindicta-platform/warscribe-system)   |
-| **Meta-Seer**        | ML, Data Science, Stats   | Train predictive models and evaluating lists.  | [vindicta-oracle](https://github.com/vindicta-platform/vindicta-oracle)     |
-| **Void Banker**      | DeFi, Ledgers, SQL        | Manage the atomic economy and gas tanks.       | [vindicta-economy](https://github.com/vindicta-platform/vindicta-economy)   |
-| **Portal Architect** | React, Vite, CSS          | Craft the player experience and visualization. | [vindicta-platform](https://github.com/vindicta-platform/vindicta-platform) |
-
----
-
-## 📦 Domain Contexts
-
-| Domain         | Repository                                                                      | Status   | Stack                    |
-| :------------- | :------------------------------------------------------------------------------ | :------- | :----------------------- |
-| **Foundation** | [vindicta-foundation](https://github.com/vindicta-platform/vindicta-foundation) | ✅ Active | Python 3.12, Pydantic V2 |
-| **Engine**     | [vindicta-engine](https://github.com/vindicta-platform/vindicta-engine)         | ✅ Active | Python 3.12, Pydantic V2 |
-| **Scribe**     | [warscribe-system](https://github.com/vindicta-platform/warscribe-system)       | ✅ Active | Python 3.12, Pydantic V2 |
-| **Economy**    | [vindicta-economy](https://github.com/vindicta-platform/vindicta-economy)       | ✅ Active | Python 3.12, Pydantic V2 |
-| **Oracle**     | [vindicta-oracle](https://github.com/vindicta-platform/vindicta-oracle)         | 🟡 Beta   | Python 3.12, Pydantic V2 |
-| **Platform**   | [vindicta-platform](https://github.com/vindicta-platform/vindicta-platform)     | ✅ Active | Vite 7+, Cloud Run       |
-| **Agents**     | [vindicta-agents](https://github.com/vindicta-platform/vindicta-agents)         | ✅ Active | Python 3.12, Pydantic V2 |
-
-<details>
-<summary><strong>📁 Archived Legacy Repos</strong></summary>
-
-The following repositories have been consolidated into the domain contexts above:
-*   `Vindicta-Core`, `Platform-Docs`, `platform-core` → `vindicta-foundation`
-*   `Dice-Engine`, `Primordia-AI`, `Entropy-Buffer` → `vindicta-engine`
-*   `WARScribe-Core`, `WARScribe-Parser`, `WARScribe-CLI`, `Battle-Transcript-Toolkit` → `warscribe-system`
-*   `Economy-Engine`, `Atomic-Ledger-Py`, `Quota-Manager` → `vindicta-economy`
-*   `Meta-Oracle`, `Arbiter-Predictor` → `vindicta-oracle`
-*   `Vindicta-API`, `Vindicta-Portal`, `Vindicta-CLI`, `Logi-Slate-UI` → `vindicta-platform`
-
-</details>
-
----
-
-<div align="center">
-
-*Built with 🎲 by the Vindicta Team*
-
-</div>
+All work here is personal and independent of any employer. Views, writing and code are my own. MIT licensed, copyright Brandon Fox.

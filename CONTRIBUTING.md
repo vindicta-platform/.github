@@ -1,23 +1,9 @@
-# Contributing to .github
 
-Thank you for your interest in contributing!
 
-## Cross-Cutting Decisions
+## Developer Certificate of Origin
 
-> **⚠️ Important:** All decisions that affect multiple repositories or have platform-wide implications **must** be recorded in [**Platform-Docs**](https://github.com/vindicta-platform/Platform-Docs) before implementation.
+Sign off every commit (`git commit -s`). That certifies you wrote the change or have the right to submit it under the MIT License, per the [DCO 1.1](https://developercertificate.org/), and attributes the contribution to you by name in the git history. Copyright in your contribution stays with you.
 
-This includes:
-- API contract changes
-- Shared schema modifications
-- Authentication/authorization changes
-- New inter-service dependencies
-- Platform-wide configuration changes
+## Status of this project
 
-See the [Platform-Docs Contributing Guide](https://github.com/vindicta-platform/Platform-Docs/blob/main/CONTRIBUTING.md) for the full process.
-
-## Repo-Specific Guidelines
-
-1. Follow existing code style and conventions
-2. Write tests for new functionality
-3. Keep PRs focused and atomic
-4. Reference related [Platform-Docs proposals](https://github.com/vindicta-platform/Platform-Docs/tree/main/docs/proposals) when applicable
+Vindicta is an active, pre-1.0 project with a single maintainer (see the [organization page](profile/README.md)). Pull requests are welcome and reviewed slowly.
